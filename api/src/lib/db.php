@@ -2,31 +2,46 @@
 
 const DEFAULT_USER     = 'test';
 const DEFAULT_PASSWORD = 'test';
-const DEFAULT_PORT = 3306;
+const DEFAULT_PORT     = 3306;
 
-$db['getConnection'] = function ($name) use (&$app) {
+$_db = [];
 
-    if (!empty($app['config']['db'][ $name ])) {
+/**
+ * @param $name
+ *
+ * @return null|mysqli
+ */
+function db_getConnection($name)
+{
+    global $_db;
 
-        if (!empty($app['db']['_connections'][ $name ])) {
-            return $app['db']['_connections'][ $name ];
+    if (!empty(getConfig()['db'][ $name ])) {
+
+        if (!empty($_db['_connections'][ $name ])) {
+            return $_db['_connections'][ $name ];
         }
 
         // @formatter:off
-        $db['_connections'][$name] = mysqli_connect(
-            $app['config']['db'][ $name ]['host'],
-            $app['config']['db'][ $name ]['user'] ?? DEFAULT_USER,
-            $app['config']['db'][ $name ]['password'] ?? DEFAULT_PASSWORD,
-            $app['config']['db'][ $name ]['database'],
-            $app['config']['db'][ $name ]['port'] ?? DEFAULT_PORT
+        $_db['_connections'][$name] = mysqli_connect(
+            getConfig()['db'][ $name ]['host'],
+            getConfig()['db'][ $name ]['user'] ?? DEFAULT_USER,
+            getConfig()['db'][ $name ]['password'] ?? DEFAULT_PASSWORD,
+            getConfig()['db'][ $name ]['database'],
+            getConfig()['db'][ $name ]['port'] ?? DEFAULT_PORT
         );
-
         // @formatter:on
 
-        return $db['_connections'][ $name ];
+        if ($error = mysqli_connect_errno()) {
+            response_error('DB error: ' . $error . mysqli_connect_error());
+        }
+
+
+        if (!$_db['_connections'][ $name ]) {
+            response_error('Unable to connect database');
+        }
+
+        return $_db['_connections'][ $name ];
     }
 
-    return 'Empty' . $name;
-};
-
-$app['db'] = $db;
+    return response_error('MySQL connection config not found ' . $name);
+}

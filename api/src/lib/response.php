@@ -2,39 +2,50 @@
 
 /**
  * @param array $data
+ *
+ * @return null
  */
-$app['response']['respond'] = function (array $data) use ($app) {
+function response_respond(array $data)
+{
     header('Content-Type:application/json');
     echo json_encode($data);
     exit(0);
-};
+}
 
-$app['response']['debug'] = function () {
+/**
+ * @return array
+ */
+function response_debug()
+{
     return [
-        'mem_peak' => memory_get_peak_usage()
+        'mem_peak' => memory_get_peak_usage(),
     ];
-};
+}
 
 /**
  * @param string $data
  * @param int    $code
+ *
+ * @return null;
  */
-$app['response']['error'] = function (string $data, int $code = 400) use (&$app) {
+function response_error(string $data, int $code = 400)
+{
     $error            = [];
     $error['error']   = true;
     $error['code']    = $code;
     $error['message'] = $data;
-    $error['debug']   = $app['response']['debug']();
+    $error['debug']   = response_debug();
 
-    $app['response']['respond']($error);
-};
+    return response_respond($error);
+}
 
 /**
  * @param array $data
  */
-$app['response']['success'] = function (array $data) use (&$app) {
+function response_success(array $data)
+{
     $data['code']  = 200;
-    $data['debug'] = $app['response']['debug']();
+    $data['debug'] = response_debug();
 
-    $app['response']['respond']($data);
-};
+    response_respond($data);
+}

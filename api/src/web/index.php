@@ -8,12 +8,14 @@ include_once __DIR__ . '/../lib/autoload.php';
 if (PHP_SAPI === 'cli') {
     $app['cli']['start']($argc, $argv);
 } else {
-    $request = $app['request']['post']();
 
-    $app['router']['handle']($request);
+
+    $request = request_post();
+
+    router_handle($request);
 
     if(empty($request)) {
-        echo $app['response']['error']('Invalid method', 404);
+        echo response_error('Invalid method', 404);
     }
 
 }

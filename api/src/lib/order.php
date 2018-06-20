@@ -2,14 +2,18 @@
 
 $app['order'] = [];
 
-$app['order']['create'] = function ($params): array {
-};
+function order_create($params): array
+{
+}
 
-$app['order']['assign'] = function ($params): array {
-};
+function order_assign($params): array
+{
+}
 
-$app['order']['pay'] = function ($params): array {
-};
+function order_pay($params): array
+{
+}
 
-$app['order']['list'] = function ($params): array {
-};
+function order_list($params): array
+{
+}

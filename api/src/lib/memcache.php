@@ -1,34 +1,39 @@
-<?php
+<?php /** @noinspection PhpMethodParametersCountMismatchInspection */
 
-$app['memcache'] = [];
+$_cache = [];
 
-$app['memcache']['_init'] = function () use (&$app) {
+function cache_init() {
+    global $_cache;
     // @formatter:off
-    $app['memcache']['_connection'] = memcache_connect(
-        $app['config']['memcache']['host'],
-        $app['config']['memcache']['port']
+    $_cache['_connection'] = memcache_connect(
+        getConfig()['memcache']['host'],
+        getConfig()['memcache']['port']
     );
+
     // @formatter:on
-};
+}
 
-$app['memcache']['falseOnCacheDown'] = function () {
-    if (empty($app['memcache']['_connection'])) {
-        return null;
-    }
-};
+function cache_set($key, $value, $ttl = null) {
+    global $_cache;
 
-$app['memcache']['set'] = function () use (&$app) {
-    $app['memcache']['falseOnCacheDown']();
-};
+    return memcache_set($_cache['_connection'], $key, $value, 0, $ttl);
+}
 
-$app['memcache']['get'] = function () use (&$app) {
-    $app['memcache']['falseOnCacheDown']();
+/**
+ * @param $key
+ *
+ * @return null|string
+ */
+function cache_get($key) {
+    global $_cache;
 
-};
+    return memcache_get($_cache['_connection'], $key);
+}
 
-$app['memcache']['del'] = function () use (&$app) {
-    $app['memcache']['falseOnCacheDown']();
+function cache_del($key) {
+    global $_cache;
 
-};
+    return memcache_delete($_cache['_connection'], $key);
+}
 
-$app['memcache']['_init']();
+cache_init();

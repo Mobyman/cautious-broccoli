@@ -2,18 +2,19 @@
 
 $router = [];
 
-$router['handle'] = function ($body) use (&$app) {
-
+function router_handle($body)
+{
     if (empty($body['method'])) {
-        $app['response']['error']('Missing method param');
+        response_error('Missing method param');
     }
 
     $router['_routes'] = [
-        'user.auth'    => $app['user']['auth'],
-        'order.create' => $app['order']['create'],
-        'order.assign' => $app['order']['assign'],
-        'order.pay'    => $app['order']['pay'],
-        'order.list'   => $app['order']['list'],
+        'user.register' => 'user_register',
+        'user.auth'     => 'user_auth',
+        'order.create'  => 'order_create',
+        'order.assign'  => 'order_assign',
+        'order.pay'     => 'order_pay',
+        'order.list'    => 'order_list',
     ];
 
     $method = $body['method'];
@@ -21,10 +22,10 @@ $router['handle'] = function ($body) use (&$app) {
     $params = $body ?? [];
 
     if (!empty($router['_routes'][ $method ])) {
-        return $app['response']['respond']($router['_routes'][ $method ]($params));
+        return response_respond($router['_routes'][ $method ]($params));
     }
 
-    $app['response']['error']('Route not found');
-};
+    return response_error('Route not found');
+}
 
 $app['router'] = $router;
