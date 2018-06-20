@@ -1,0 +1,58 @@
+version: "3.3"
+services:
+  api:
+    build: api/.
+    volumes:
+      - type: bind
+        source: ./api/src
+        target: /var/www/default
+    networks:
+      - freelance
+    depends_on:
+      - db-order
+      - db-transaction
+      - db-user
+  db-order:
+    image: mysql:5.7
+    networks:
+      - freelance
+    environment:
+      MYSQL_DATABASE: order
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: toor # в боевых условиях, конечно, нужен другой пароль
+      MYSQL_ROOT_HOST: 172.*.*.*
+  db-user:
+    image: mysql:5.7
+    networks:
+      - freelance
+    environment:
+      MYSQL_DATABASE: user
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: toor # в боевых условиях, конечно, нужен другой пароль
+      MYSQL_ROOT_HOST: 172.*.*.*
+  db-transaction:
+    image: mysql:5.7
+    networks:
+      - freelance
+    environment:
+      MYSQL_DATABASE: transaction
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: toor # в боевых условиях, конечно, нужен другой пароль
+      MYSQL_ROOT_HOST: 172.*.*.*
+  frontend:
+      build: frontend/.
+      volumes:
+        - type: bind
+          source: ./frontend/src
+          target: /root/app/src
+      networks:
+        - freelance
+      depends_on:
+        - api
+
+networks:
+  freelance:
+    driver: bridge
