@@ -18,7 +18,7 @@ RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 RUN apt-get update \
     && mkdir -p /run/php \
     && apt-get install --no-install-recommends --no-install-suggests -y \
-    nginx php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql
+    nginx php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql php${PHP_VER}-memcache
 
 RUN useradd --uid 1001 -g www-data -s /bin/bash web -d /var/www/default \
     && mkdir -p /var/www/default \

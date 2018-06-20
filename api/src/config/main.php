@@ -1,7 +1,11 @@
 <?php
 
 $app['config'] = [
-    'db' => [
+    'memcache' => [
+        'host' => 'cache',
+        'port' => 11211,
+    ],
+    'db'       => [
         'order'       => [
             'host'     => 'db-order',
             'database' => 'order',

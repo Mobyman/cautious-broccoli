@@ -1,27 +1,26 @@
 <?php
 
-$request = [];
+$app['request'] = [];
 
-$request['_headers'] = [];
-$request['_init']    = function () use ($app) {
+$app['request']['_init']    = function () use (&$app) {
+    $app['request']['q'] = 123;
+
     $contentType = $_SERVER['CONTENT_TYPE'] ?? null;
     if ($contentType !== 'application/json') {
         $app['response']['error']('Invalid content type');
     }
 
-    $request['_method'] = $_SERVER['REQUEST_METHOD'];
-    $request['_post']   = json_decode(file_get_contents('php://input')) ?? [];
-    $request['_get']    = $_GET;
 
+    $app['request']['_data']['_method'] = $_SERVER['REQUEST_METHOD'];
+    $app['request']['_data']['_post']   = json_decode(file_get_contents('php://input'), true) ?? [];
+    $app['request']['_data']['_get']    = $_GET;
 };
 
-$request['post'] = function () use ($app) {
+$app['request']['post'] = function () use (&$app) {
 
-    if (empty($app['request']['_post'])) {
+    if (empty($app['request']['_data'])) {
         $app['request']['_init']();
     }
 
-    return $app['request']['_post'];
+    return $app['request']['_data']['_post'];
 };
-
-$app['request'] = $request;

@@ -4,7 +4,7 @@ const DEFAULT_USER     = 'test';
 const DEFAULT_PASSWORD = 'test';
 const DEFAULT_PORT = 3306;
 
-$db['getConnection'] = function ($name) use ($app) {
+$db['getConnection'] = function ($name) use (&$app) {
 
     if (!empty($app['config']['db'][ $name ])) {
 

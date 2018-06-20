@@ -2,8 +2,10 @@
 
 $user = [];
 
-$user['login'] = function($params) {
+$user['auth'] = function($params): array {
 
+
+    return [];
 };
 
 $app['user'] = $user;

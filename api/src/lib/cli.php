@@ -2,7 +2,7 @@
 
 
 $cli = [];
-$cli['start'] = function($argc, $argv) use($app) {
+$cli['start'] = function($argc, $argv) use(&$app) {
 
     if($argv[1] === 'migrate') {
         echo 'Start migrate...' . PHP_EOL;

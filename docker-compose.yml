@@ -12,6 +12,11 @@ services:
       - db-order
       - db-transaction
       - db-user
+      - cache
+  cache:
+    image: memcached:latest
+    networks:
+      - freelance
   db-order:
     image: mysql:5.7
     networks:

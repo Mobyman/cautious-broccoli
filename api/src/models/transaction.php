@@ -1,1 +1,3 @@
 <?php
+
+$app['models']['transaction'] = [];
