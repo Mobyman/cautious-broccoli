@@ -1,10 +1,13 @@
 <?php
 
 $_db = [];
+$_user = [];
 
 require_once __DIR__ . '/../config/main.php';
 
 require_once  __DIR__ . '/../lib/memcache.php';
+require_once  __DIR__ . '/../lib/session.php';
+
 require_once  __DIR__ . '/../lib/db.php';
 
 require_once  __DIR__ . '/../models/order.php';

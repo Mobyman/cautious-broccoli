@@ -1,7 +1,6 @@
 <?php
 
 
-
 function m_User_init()
 {
     global $_db;
@@ -70,3 +69,23 @@ function m_User_exists_login_password(string $login, string $password)
     return $id;
 }
 
+function m_User_get_profile($userId)
+{
+    global $_db;
+
+    $userId = (int) $userId;
+    $query  = "SELECT * FROM `users` WHERE id=$userId;";
+
+    $result = mysqli_query($_db['_connections']['user'], $query);
+
+    if (!$result) {
+        return response_error(mysqli_error($_db['_connections']['order']));
+    }
+
+    $profile = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    if (!$profile) {
+        return response_error('Empty profile');
+    }
+
+    return $profile;
+}

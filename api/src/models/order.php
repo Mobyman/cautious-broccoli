@@ -17,37 +17,40 @@ function m_Order_init()
 
 m_Order_init();
 
-function m_Order_create(int $hirerId, string $title, string $description, int $status): bool
+function m_Order_create(int $hirerId, string $title, string $description)
 {
     global $_db;
 
-    $query = 'INSERT INTO `orders` (hirer_id, title, description, status) VALUES (?, ?, ?, ?);';
-    $s     = mysqli_prepare($_db['_connections']['order'], $query);
+    $query  = 'INSERT INTO `orders` (hirer_id, title, description, status) VALUES (?, ?, ?, ?);';
+    $s      = mysqli_prepare($_db['_connections']['order'], $query);
+    $status = STATUS_OPENED;
     mysqli_stmt_bind_param($s, 'issi', $hirerId, $title, $description, $status);
     mysqli_stmt_execute($s);
+    $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
 
-    if (!mysqli_stmt_affected_rows($s)) {
+    if (!$rows) {
         response_error('Cannot insert row');
 
         return false;
     }
 
-    return true;
+    return mysqli_insert_id($_db['_connections']['order']);
 }
 
 
-function m_Order_assign(int $orderId, string $hirerId): bool
+function m_Order_assign(int $orderId, string $workerId): bool
 {
     global $_db;
 
-    $query = 'UPDATE `orders` SET hirer_id=? WHERE id=? AND hirer_id IS NULL AND status=0;';
+    $query = 'UPDATE `orders` SET worker_id=? WHERE id=? AND worker_id IS NULL AND status=0;';
     $s     = mysqli_prepare($_db['_connections']['order'], $query);
-    mysqli_stmt_bind_param($s, 'ii', $$orderId, $hirerId);
+    mysqli_stmt_bind_param($s, 'ii', $workerId, $orderId);
     mysqli_stmt_execute($s);
+    $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
 
-    if (!mysqli_stmt_affected_rows($s)) {
+    if (!$rows) {
         response_error('Order not found');
 
         return false;
@@ -84,7 +87,7 @@ function m_Order_get_unhandled()
     $query = 'SELECT id,hirer_id,worker_id,transaction_id,status FROM `orders` WHERE status IN (1,2);';
 
     $result = mysqli_query($_db['_connections']['order'], $query);
-    if(!$result) {
+    if (!$result) {
         response_error(mysqli_error($_db['_connections']['order']));
     }
 

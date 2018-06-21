@@ -2,9 +2,7 @@
 
 namespace app\tests\api;
 
-use Codeception\Module\MultiDb;
-use Codeception\TestCase\Test;
-use Codeception\Util\Debug;
+require_once __DIR__ . '/BaseTest.php';
 
 class UserTest extends BaseTest
 {
@@ -19,6 +17,25 @@ class UserTest extends BaseTest
         $this->tester->seeResponseContainsJson([
             'meta' => [
                 'code' => 200,
+            ],
+        ]);
+    }
+
+    public function testNegativeMultiRegister()
+    {
+        $this->request('user.register', [
+            'login'    => 'test',
+            'password' => 'testpassword',
+            'type'     => 1,
+        ]);
+        $this->request('user.register', [
+            'login'    => 'test',
+            'password' => 'password',
+            'type'     => 1,
+        ]);
+        $this->tester->seeResponseContainsJson([
+            'meta' => [
+                'code' => 403,
             ],
         ]);
     }
@@ -46,5 +63,29 @@ class UserTest extends BaseTest
             ],
         ]);
         $this->tester->seeResponseJsonMatchesXpath('token');
+    }
+
+    public function testNegativeLoginInvalidPassword()
+    {
+        $this->request('user.register', [
+            'login'    => 'test',
+            'password' => 'testpassword',
+            'type'     => 1,
+        ]);
+        $this->tester->seeResponseContainsJson([
+            'meta' => [
+                'code' => 200,
+            ],
+        ]);
+
+        $this->request('user.auth', [
+            'login'    => 'test',
+            'password' => 'wrongpassword',
+        ]);
+        $this->tester->seeResponseContainsJson([
+            'meta' => [
+                'code' => 404,
+            ],
+        ]);
     }
 }

@@ -29,7 +29,6 @@ function cli_start($argc, $argv)
         $ordersConnection = db_getConnection('order');
         $orders = m_Order_get_unhandled();
 
-        var_dump($orders); exit();
         while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
             var_dump($row);
         }

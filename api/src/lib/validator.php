@@ -4,6 +4,7 @@
 function validator_validate(array $queryRules, array $params)
 {
 
+    global $_user;
 
     $_types = [
         'string' => function ($v) {
@@ -18,7 +19,7 @@ function validator_validate(array $queryRules, array $params)
     ];
 
     $rules = [
-        'type' => function ($type, $v) use ($_types) {
+        'type'       => function ($type, $v) use ($_types) {
             if (empty($_types[ $type ])) {
                 response_error('Invalid validator type: ' . $type);
             }
@@ -50,6 +51,8 @@ function validator_validate(array $queryRules, array $params)
                 }
             } else {
                 response_error('Invalid rule name: ' . $attributeRule);
+
+                return false;
             }
         }
     }

@@ -8,9 +8,11 @@
         }
     ],
     "require": {
-        "iamdevice/codeception-multidb": "^1.0"
     },
     "require-dev": {
-        "codeception/codeception": "^2.4"
+        "codeception/codeception": "^2.4",
+        "iamdevice/codeception-multidb": "^1.0",
+        "flow/jsonpath": "^0.4.0",
+        "fzaninotto/faker": "^1.7"
     }
 }
