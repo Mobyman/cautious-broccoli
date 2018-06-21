@@ -1,0 +1,42 @@
+class_name: ApiTester
+settings:
+    strict_xml: true
+    bootstrap: _bootstrap.php
+    suite_class: \PHPUnit_Framework_TestSuite
+    memory_limit: 1024M
+    log: true
+    colors: true
+modules:
+  enabled: [MultiDb, PhpBrowser, REST]
+  config:
+      PhpBrowser:
+         url: http://api/
+      REST:
+        depends: PhpBrowser
+        url: http://api/
+      MultiDb:
+        connections:
+         orderDb:
+           dsn: 'mysql:host=db-order;port=3306;dbname=order'
+           user: 'test'
+           password: 'test'
+           dump: ''
+           populate: true
+           cleanup: false
+           reconnect: true
+         transactionDb:
+           dsn: 'mysql:host=db-transaction;port=3306;dbname=transaction'
+           user: 'test'
+           password: 'test'
+           dump: ''
+           populate: true
+           cleanup: false
+           reconnect: true
+         userDb:
+           dsn: 'mysql:host=db-user;port=3306;dbname=user'
+           user: 'test'
+           password: 'test'
+           dump: ''
+           populate: true
+           cleanup: false
+           reconnect: true

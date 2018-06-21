@@ -3,13 +3,26 @@
 /**
  * @param array $data
  *
+ * @param bool  $isFail
+ *
+ * @param int   $code
+ *
  * @return null
  */
-function response_respond(array $data)
+function response_respond(array $data, $isFail = false, $code = 400)
 {
-    header('Content-Type:application/json');
+    if (PHP_SAPI !== 'cli') {
+        header('Content-Type:application/json');
+    }
+
+    $data['meta']['code'] = $isFail
+        ? $code
+        : 200;
+
     echo json_encode($data);
-    exit(0);
+    exit(!$isFail
+        ? 0
+        : -1);
 }
 
 /**
@@ -31,12 +44,10 @@ function response_debug()
 function response_error(string $data, int $code = 400)
 {
     $error            = [];
-    $error['error']   = true;
-    $error['code']    = $code;
     $error['message'] = $data;
     $error['debug']   = response_debug();
 
-    return response_respond($error);
+    return response_respond($error, true, $code);
 }
 
 /**

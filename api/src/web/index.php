@@ -6,7 +6,7 @@ ini_set('display_errors', 'On');
 include_once __DIR__ . '/../lib/autoload.php';
 
 if (PHP_SAPI === 'cli') {
-    $app['cli']['start']($argc, $argv);
+    cli_start($argc, $argv);
 } else {
 
 

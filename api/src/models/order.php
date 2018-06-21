@@ -1,20 +1,29 @@
 <?php
 
-$_db = [];
+const STATUS_OPENED   = 0;
+const STATUS_RESOLVED = 1;
+const STATUS_HOLD     = 2;
+const STATUS_CLOSED   = 3;
+
 function m_Order_init()
 {
     global $_db;
 
-    $_db['_connection'] = db_getConnection('order');
+    $_db['_connections']['order'] = db_getConnection('order');
+    if (empty($_db['_connections']['order'])) {
+        response_error('Unable to connect database');
+    }
 }
 
-function m_Order_insert(int $hirerId, int $workerId, int $transactionId, int $status): bool
+m_Order_init();
+
+function m_Order_create(int $hirerId, string $title, string $description, int $status): bool
 {
     global $_db;
 
-    $query = 'INSERT INTO `orders` (hirer_id, worker_id, transaction_id, status) VALUES (?, ?, ?, ?);';
-    $s     = mysqli_prepare($_db['_connection'], $query);
-    mysqli_stmt_bind_param($s, 'iiii', $hirerId, $workerId, $transactionId, $status);
+    $query = 'INSERT INTO `orders` (hirer_id, title, description, status) VALUES (?, ?, ?, ?);';
+    $s     = mysqli_prepare($_db['_connections']['order'], $query);
+    mysqli_stmt_bind_param($s, 'issi', $hirerId, $title, $description, $status);
     mysqli_stmt_execute($s);
     mysqli_stmt_close($s);
 
@@ -25,6 +34,66 @@ function m_Order_insert(int $hirerId, int $workerId, int $transactionId, int $st
     }
 
     return true;
+}
+
+
+function m_Order_assign(int $orderId, string $hirerId): bool
+{
+    global $_db;
+
+    $query = 'UPDATE `orders` SET hirer_id=? WHERE id=? AND hirer_id IS NULL AND status=0;';
+    $s     = mysqli_prepare($_db['_connections']['order'], $query);
+    mysqli_stmt_bind_param($s, 'ii', $$orderId, $hirerId);
+    mysqli_stmt_execute($s);
+    mysqli_stmt_close($s);
+
+    if (!mysqli_stmt_affected_rows($s)) {
+        response_error('Order not found');
+
+        return false;
+    }
+
+    return true;
+}
+
+
+function m_Order_pay(int $orderId): bool
+{
+    global $_db;
+
+    $query  = 'UPDATE `orders` SET status=? tid=UUID() WHERE id=? AND status=1;';
+    $s      = mysqli_prepare($_db['_connections']['order'], $query);
+    $status = STATUS_HOLD;
+    mysqli_stmt_bind_param($s, 'i', $status, $$orderId);
+    mysqli_stmt_execute($s);
+    mysqli_stmt_close($s);
+
+    if (!mysqli_stmt_affected_rows($s)) {
+        response_error('Order not found');
+
+        return false;
+    }
+
+    return true;
+}
+
+function m_Order_get_unhandled()
+{
+    global $_db;
+
+    $query = 'SELECT id,hirer_id,worker_id,transaction_id,status FROM `orders` WHERE status IN (1,2);';
+
+    $result = mysqli_query($_db['_connections']['order'], $query);
+    if(!$result) {
+        response_error(mysqli_error($_db['_connections']['order']));
+    }
+
+    return $result;
+}
+
+function m_Order_handle_transaction()
+{
+
 }
 
 function m_Order_update($criteria, $attributes)
@@ -39,5 +108,5 @@ function m_Order_delete($criteria)
 
 }
 
-m_Order_init();
+
 

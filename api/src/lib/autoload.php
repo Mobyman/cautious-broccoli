@@ -1,17 +1,6 @@
 <?php
 
-global $app;
-
-$app = ['connections' => []];
-
-$app['setConnection'] = function($key, $data) use(&$app) {
-    $app['connections'][$key] = $data;
-};
-
-$app['getConnection'] = function($key) use(&$app) {
-    return $app['connections'][$key] ?? null;
-};
-
+$_db = [];
 
 require_once __DIR__ . '/../config/main.php';
 
@@ -29,5 +18,4 @@ require_once  __DIR__ . '/../lib/user.php';
 require_once  __DIR__ . '/../lib/order.php';
 require_once  __DIR__ . '/../lib/validator.php';
 require_once  __DIR__ . '/../lib/router.php';
-
 

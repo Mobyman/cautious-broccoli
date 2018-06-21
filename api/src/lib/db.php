@@ -4,8 +4,6 @@ const DEFAULT_USER     = 'test';
 const DEFAULT_PASSWORD = 'test';
 const DEFAULT_PORT     = 3306;
 
-$_db = [];
-
 /**
  * @param $name
  *

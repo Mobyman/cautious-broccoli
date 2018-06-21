@@ -4,6 +4,7 @@
 function cli_start($argc, $argv)
 {
 
+
     if ($argv[1] === 'migrate') {
         echo 'Start migrate...' . PHP_EOL;
         $orders       = file_get_contents(__DIR__ . '/../data/orders.sql');
@@ -20,8 +21,27 @@ function cli_start($argc, $argv)
         }
 
         echo 'End migrate...' . PHP_EOL;
-
+        exit(0);
     }
+
+    if ($argv[1] === 'transactions') {
+        echo 'Start handle transactions...' . PHP_EOL;
+        $ordersConnection = db_getConnection('order');
+        $orders = m_Order_get_unhandled();
+
+        var_dump($orders); exit();
+        while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
+            var_dump($row);
+        }
+
+        mysqli_free_result($orders);
+        mysqli_close($ordersConnection);
+
+        exit(0);
+    }
+
+
+
 
 }
 
