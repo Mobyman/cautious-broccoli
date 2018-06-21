@@ -35,17 +35,10 @@ class BaseTest extends Test
     protected function _before()
     {
         $this->_multiDb = $this->getModule('MultiDb');
-    }
-
-    protected function _after()
-    {
         $this->clearUsersDb();
         $this->clearOrdersDb();
         $this->clearTransactionsDb();
-
-        parent::_after();
     }
-
 
     protected function clearUsersDb()
     {

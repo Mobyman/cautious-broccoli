@@ -11,6 +11,7 @@ class OrderTest extends BaseTest
         $token = $this->getToken(self::ROLE_HIRER);
         $this->request('order.create', [
             'token' => $token,
+            'cost' => $this->_faker->numberBetween(100, 10000),
             'title' => 'title',
             'description' => 'description'
         ]);
@@ -30,6 +31,7 @@ class OrderTest extends BaseTest
 
         $this->request('order.create', [
             'token' => $hirerToken,
+            'cost' => $this->_faker->numberBetween(100, 10000),
             'title' => 'title',
             'description' => 'description'
         ]);
@@ -60,6 +62,7 @@ class OrderTest extends BaseTest
 
         $this->request('order.create', [
             'token' => $workerToken,
+            'cost' => $this->_faker->numberBetween(100, 10000),
             'title' => 'title',
             'description' => 'description'
         ]);
@@ -71,6 +74,7 @@ class OrderTest extends BaseTest
 
         $this->request('order.create', [
             'token' => $hirerToken,
+            'cost' => $this->_faker->numberBetween(100, 10000),
             'title' => 'title',
             'description' => 'description'
         ]);
@@ -86,5 +90,26 @@ class OrderTest extends BaseTest
         ]);
     }
 
+    public function testList()
+    {
+        $token = $this->getToken(self::ROLE_HIRER);
+
+        $this->request('order.create', [
+            'token' => $token,
+            'cost' => $this->_faker->numberBetween(100, 10000),
+            'title' => implode(' ', $this->_faker->words(5)),
+            'description' => $this->_faker->paragraph(2)
+        ]);
+
+        $this->request('order.list', [
+            'token' => $token,
+            'page' => 1,
+        ]);
+        $this->tester->seeResponseContainsJson([
+            'meta' => [
+                'code' => 200,
+            ],
+        ]);
+    }
 
 }

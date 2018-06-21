@@ -14,10 +14,8 @@ m_User_init();
 
 function m_User_insert(string $login, string $password, int $type): bool
 {
-    global $_db;
-
     $query = 'INSERT INTO `users` (login, password, type) VALUES (?, ?, ?);';
-    $s     = mysqli_prepare($_db['_connections']['user'], $query);
+    $s     = mysqli_prepare(db_getConnection('user'), $query);
     $hash  = password_hash($password, PASSWORD_DEFAULT);
     mysqli_stmt_bind_param($s, 'ssi', $login, $hash, $type);
     mysqli_stmt_execute($s);
@@ -25,7 +23,7 @@ function m_User_insert(string $login, string $password, int $type): bool
     mysqli_stmt_close($s);
 
     if (!$rows) {
-        response_error('Cannot insert row ' . mysqli_error($_db['_connections']['user'], $query));
+        response_error('Cannot insert row ' . mysqli_error(db_getConnection('user'), $query));
 
         return false;
     }
@@ -35,11 +33,9 @@ function m_User_insert(string $login, string $password, int $type): bool
 
 function m_User_exists_login(string $login): bool
 {
-    global $_db;
-
     $query = 'SELECT 1 FROM `users` WHERE login=? LIMIT 1;';
 
-    $s = mysqli_prepare($_db['_connections']['user'], $query);
+    $s = mysqli_prepare(db_getConnection('user'), $query);
     mysqli_stmt_bind_param($s, 's', $login);
     mysqli_stmt_execute($s);
     mysqli_stmt_bind_result($s, $result);
@@ -51,10 +47,8 @@ function m_User_exists_login(string $login): bool
 
 function m_User_exists_login_password(string $login, string $password)
 {
-    global $_db;
-
     $query = 'SELECT id, password FROM `users` WHERE login=? LIMIT 1;';
-    $s     = mysqli_prepare($_db['_connections']['user'], $query);
+    $s     = mysqli_prepare(db_getConnection('user'), $query);
 
     mysqli_stmt_bind_param($s, 's', $login);
     mysqli_stmt_execute($s);
@@ -71,15 +65,17 @@ function m_User_exists_login_password(string $login, string $password)
 
 function m_User_get_profile($userId)
 {
-    global $_db;
-
     $userId = (int) $userId;
+    if($cached = cache_get_model('user', $userId)) {
+        return $cached;
+    }
+
     $query  = "SELECT * FROM `users` WHERE id=$userId;";
 
-    $result = mysqli_query($_db['_connections']['user'], $query);
+    $result = mysqli_query(db_getConnection('user'), $query);
 
     if (!$result) {
-        return response_error(mysqli_error($_db['_connections']['order']));
+        return response_error(mysqli_error(db_getConnection('order')));
     }
 
     $profile = mysqli_fetch_array($result, MYSQLI_ASSOC);
@@ -87,5 +83,6 @@ function m_User_get_profile($userId)
         return response_error('Empty profile');
     }
 
+    cache_set_model('user', $userId, $profile);
     return $profile;
 }

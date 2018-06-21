@@ -20,6 +20,14 @@ function order_create($params): array
             'required'   => true,
             'max_length' => 4096,
         ],
+        'cost'        => [
+            'type'     => 'cost',
+            'required' => true,
+            'range'    => [
+                0,
+                PHP_INT_MAX,
+            ],
+        ],
     ], $params);
 
     $isHirer = user_role_is(ROLE_HIRER);
@@ -27,7 +35,7 @@ function order_create($params): array
         response_error('You must be hirer for create orders!', 403);
     }
 
-    $orderId = m_Order_create(user_get_id(), $req['title'], $req['description']);
+    $orderId = m_Order_create(user_get_id(), $req['cost'], $req['title'], $req['description']);
 
     return ['order_id' => $orderId];
 }
@@ -35,11 +43,11 @@ function order_create($params): array
 function order_assign($params): array
 {
     $req = request_handle([
-        'token'       => [
+        'token'    => [
             'type'     => 'string',
             'required' => true,
         ],
-        'order_id'       => [
+        'order_id' => [
             'type'       => 'number',
             'required'   => true,
             'max_length' => 255,
@@ -54,13 +62,25 @@ function order_assign($params): array
     $orderId = m_Order_assign($req['order_id'], user_get_id());
 
     return ['order_id' => $orderId];
-
-}
-
-function order_pay($params): array
-{
 }
 
 function order_list($params): array
 {
+    $req = request_handle([
+        'token' => [
+            'type'     => 'string',
+            'required' => true,
+        ],
+        'page'  => [
+            'type'    => 'number',
+            'default' => 0,
+            'range' => [1, null],
+        ],
+    ], $params);
+
+    --$req['page'];
+
+    $items = m_Order_list($req['page']);
+
+    return ['items' => $items];
 }

@@ -16,6 +16,13 @@ function validator_validate(array $queryRules, array $params)
         'enum'   => function () {
             return false;
         },
+        'cost'   => function ($v) {
+            if (!is_numeric($v)) {
+                return false;
+            }
+
+            return (int) $v * 100;
+        },
     ];
 
     $rules = [
@@ -29,14 +36,24 @@ function validator_validate(array $queryRules, array $params)
         'required'   => function ($v) {
             return !empty($v);
         },
-        'range'      => function ($min, $max, $v) {
-            return $v > $min && $v < $max;
+        'range'      => function ($params, $v) {
+            $min = $params[0] ?? 0;
+            $max = $params[1] ?? PHP_INT_MAX;
+
+            return $v >= $min && $v <= $max;
         },
         'max_length' => function ($length, $v) {
             return mb_strlen($v) <= $length;
         },
         'enum'       => function ($values, $v) {
             return in_array($v, $values, true);
+        },
+        'default' => function($value, $v) {
+            if(empty($v)) {
+                return $value;
+            }
+
+            return $v;
         },
     ];
 

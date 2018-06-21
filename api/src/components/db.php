@@ -41,5 +41,5 @@ function db_getConnection($name)
         return $_db['_connections'][ $name ];
     }
 
-    return response_error('MySQL connection config not found ' . $name);
+    return response_error('Connection config not found ' . $name);
 }
