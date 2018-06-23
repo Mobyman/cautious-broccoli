@@ -18,7 +18,8 @@ services:
     networks:
       - freelance
   db-order:
-    image: mysql:5.7
+    image: mysql:latest
+    command: mysqld --default-authentication-plugin=mysql_native_password
     networks:
       - freelance
     environment:
@@ -28,7 +29,8 @@ services:
       MYSQL_ROOT_PASSWORD: toor # в боевых условиях, конечно, нужен другой пароль
       MYSQL_ROOT_HOST: 172.*.*.*
   db-user:
-    image: mysql:5.7
+    image: mysql:latest
+    command: mysqld --default-authentication-plugin=mysql_native_password
     networks:
       - freelance
     environment:
@@ -38,7 +40,8 @@ services:
       MYSQL_ROOT_PASSWORD: toor # в боевых условиях, конечно, нужен другой пароль
       MYSQL_ROOT_HOST: 172.*.*.*
   db-transaction:
-    image: mysql:5.7
+    image: mysql:latest
+    command: mysqld --default-authentication-plugin=mysql_native_password
     networks:
       - freelance
     environment:

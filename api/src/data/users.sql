@@ -4,6 +4,8 @@ CREATE TABLE `users` (
   `password` VARCHAR(60) NOT NULL,
   `type` TINYINT unsigned NOT NULL,
   `balance` BIGINT NOT NULL DEFAULT 0,
+  `hold` BIGINT NOT NULL DEFAULT 0,
+  `last_transaction_id` BINARY(16),
 UNIQUE KEY `login_password_key` (`login`,`password`) USING HASH,
 UNIQUE KEY `login_key` (`login`) USING BTREE,
 PRIMARY KEY (`id`)

@@ -1,9 +1,9 @@
 <?php
 
-const STATUS_OPENED   = 0;
-const STATUS_RESOLVED = 1;
-const STATUS_HOLD     = 2;
-const STATUS_CLOSED   = 3;
+const ORDER_STATUS_OPENED   = 0;
+const ORDER_STATUS_RESOLVED = 1;
+const ORDER_STATUS_HOLD     = 2;
+const ORDER_STATUS_CLOSED   = 3;
 
 const PAGE_SIZE = 50;
 
@@ -16,11 +16,12 @@ function m_Order_init()
         response_error('Unable to connect database');
     }
 }
+
 m_Order_init();
 
 function m_Order_create(int $hirerId, int $cost, string $title, string $description)
 {
-    $status = STATUS_OPENED;
+    $status = ORDER_STATUS_OPENED;
 
     $query = 'INSERT INTO `orders` (hirer_id, `cost`, title, description, status) VALUES (?, ?, ?, ?, ?);';
     $s     = mysqli_prepare(db_getConnection('order'), $query);
@@ -28,6 +29,7 @@ function m_Order_create(int $hirerId, int $cost, string $title, string $descript
     mysqli_stmt_bind_param($s, 'iissi', $hirerId, $cost, $title, $description, $status);
     mysqli_stmt_execute($s);
     $rows = mysqli_stmt_affected_rows($s);
+    $error = mysqli_error(db_getConnection('transaction'));
     mysqli_stmt_close($s);
 
     if (!$rows) {
@@ -40,46 +42,56 @@ function m_Order_create(int $hirerId, int $cost, string $title, string $descript
 }
 
 
-function m_Order_assign(int $orderId, string $workerId): bool
+function m_Order_assign(int $orderId, string $workerId)
 {
-    $query = 'UPDATE `orders` SET worker_id=? WHERE id=? AND worker_id IS NULL AND status=0;';
-    $s     = mysqli_prepare(db_getConnection('order'), $query);
-    mysqli_stmt_bind_param($s, 'ii', $workerId, $orderId);
+    $status = ORDER_STATUS_OPENED;
+    $query  = 'UPDATE `orders` SET worker_id=?, status=1 WHERE id=? AND worker_id IS NULL AND status=?;';
+    $s      = mysqli_prepare(db_getConnection('order'), $query);
+    mysqli_stmt_bind_param($s, 'iii', $workerId, $orderId, $status);
     mysqli_stmt_execute($s);
     $rows = mysqli_stmt_affected_rows($s);
+    $error = mysqli_error(db_getConnection('transaction'));
     mysqli_stmt_close($s);
 
     if (!$rows) {
-        response_error('Order not found');
+        response_error('Order for assign not found');
 
         return false;
     }
 
-    return true;
+    return $orderId;
 }
 
 
-function m_Order_pay(int $orderId): bool
+function m_Order_generate_transaction_id(int $orderId)
 {
-    $query  = 'UPDATE `orders` SET status=? tid=UUID() WHERE id=? AND status=1;';
-    $s      = mysqli_prepare(db_getConnection('order'), $query);
-    $status = STATUS_HOLD;
-    mysqli_stmt_bind_param($s, 'i', $status, $$orderId);
-    mysqli_stmt_execute($s);
-    mysqli_stmt_close($s);
 
-    if (!mysqli_stmt_affected_rows($s)) {
-        response_error('Order not found');
+    $uuid         = str_replace('-', '', uuid_create());
+    $packed       = pack('h*', $uuid);
+    $openedStatus = ORDER_STATUS_RESOLVED;
+    $holdStatus   = ORDER_STATUS_HOLD;
+
+    $query = 'UPDATE `orders` SET status=?, transaction_id=? WHERE id=? AND status=? AND transaction_id IS NULL;';
+    $s     = mysqli_prepare(db_getConnection('order'), $query);
+    mysqli_stmt_bind_param($s, 'isii', $holdStatus, $packed, $orderId, $openedStatus);
+    mysqli_stmt_execute($s);
+    $rows = mysqli_stmt_affected_rows($s);
+    $error = mysqli_error(db_getConnection('transaction'));
+    mysqli_stmt_close($s);
+    $error = mysqli_error(db_getConnection('order'));
+
+    if ($error || !$rows) {
+        response_error('Opened order not found' . $error ?? null);
 
         return false;
     }
 
-    return true;
+    return $packed;
 }
 
 function m_Order_get_unhandled()
 {
-    $query = 'SELECT id,hirer_id,worker_id,transaction_id,status FROM `orders` WHERE status IN (1,2);';
+    $query = 'SELECT id FROM `orders` WHERE status IN (1,2);';
 
     $result = mysqli_query(db_getConnection('order'), $query);
     if (!$result) {
@@ -89,14 +101,14 @@ function m_Order_get_unhandled()
     return $result;
 }
 
-function m_Order_get($orderId)
+function m_Order_get($orderId, $isWithCache = true)
 {
     $orderId = (int) $orderId;
-    if($cached = cache_get_model('order', $orderId)) {
+    if ($isWithCache && $cached = cache_get_model('order', $orderId)) {
         return $cached;
     }
 
-    $query  = "SELECT * FROM `orders` WHERE id=$orderId;";
+    $query = "SELECT * FROM `orders` WHERE id=$orderId;";
 
     $result = mysqli_query(db_getConnection('order'), $query);
 
@@ -105,29 +117,34 @@ function m_Order_get($orderId)
     }
 
     $order = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    $error = mysqli_error(db_getConnection('transaction'));
+
     if (!$order) {
         return response_error('Empty order');
     }
 
     cache_set_model('order', $orderId, $order);
+
     return $order;
 }
 
 function m_Order_list(int $page)
 {
-    $status = STATUS_OPENED;
+    $status = ORDER_STATUS_OPENED;
     $offset = 0;
     if ($page) {
         $offset = (PAGE_SIZE * $page);
     }
 
-    $query = 'SELECT id FROM `orders` WHERE status=' . $status . ' LIMIT ' . $offset . ',' . PAGE_SIZE;
+    $query  = 'SELECT id FROM `orders` WHERE status=' . $status . ' LIMIT ' . $offset . ',' . PAGE_SIZE;
     $result = mysqli_query(db_getConnection('order'), $query);
     if (!$result) {
         return response_error(mysqli_error(db_getConnection('order')));
     }
 
     $orderIds = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    $error = mysqli_error(db_getConnection('transaction'));
+
     if (!$orderIds) {
         return response_error('Orders not found', 404);
     }
@@ -142,8 +159,138 @@ function m_Order_list(int $page)
 }
 
 
-function m_Order_handle_transaction()
+function m_Order_handle(int $orderId)
 {
+    $order = m_Order_get($orderId, false);
+    if ($order) {
 
+        if (empty($order['transaction_id'])) {
+            $transactionId = m_Order_generate_transaction_id((int) $orderId);
+            if (!$transactionId) {
+                return response_error('Unable to generate transaction id!');
+            }
+
+            $order['transaction_id'] = $transactionId;
+        }
+
+        $transaction = m_Transaction_get($order['transaction_id']);
+        if (!$transaction) {
+            $transaction = m_Transaction_create($order['transaction_id'], 1, $orderId, TRANSACTION_STATUS_CREATED);
+            if (!$transaction) {
+                response_error('Transaction not created');
+                return false;
+            }
+        }
+
+        if (!in_array((int) $transaction['status'], [
+            TRANSACTION_STATUS_CREATED,
+            TRANSACTION_STATUS_HOLD,
+            TRANSACTION_STATUS_SENT,
+            TRANSACTION_STATUS_DONE,
+        ], true)) {
+            response_error('Invalid transaction status');
+
+            return false;
+        }
+
+        if ((int) $transaction['status'] === TRANSACTION_STATUS_CREATED) {
+
+            $hirer = m_User_get_profile($order['hirer_id']);
+
+            if (!$hirer) {
+                response_error('Hirer not found');
+
+                return false;
+            }
+
+            $isHirerHoldOk = $hirer['last_transaction_id'] === $order['transaction_id'];
+            if (!$isHirerHoldOk && $hirer['last_transaction_id'] === null) {
+
+                if($hirer['balance'] < $order['cost']) {
+                    response_error('Insufficient hirer balance');
+
+                    return false;
+                }
+
+                if (!$isHirerHoldOk = m_User_hold_hirer($order['hirer_id'], $order['transaction_id'], $order['cost'])) {
+                    response_error('Hirer handle another transaction, skipping');
+
+                    return false;
+                }
+            }
+
+            if ($isHirerHoldOk) {
+                if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_HOLD)) {
+                    response_error('Unable to set transaction status to hold');
+
+                    return false;
+                }
+
+                $transaction['status'] = TRANSACTION_STATUS_HOLD;
+            }
+        }
+
+        if ((int) $transaction['status'] === TRANSACTION_STATUS_HOLD) {
+            $worker = m_User_get_profile($order['worker_id']);
+            if (!$worker) {
+                response_error('Worker not found');
+
+                return false;
+            }
+
+            $commission     = (int) (($order['cost'] / 100) * 5);
+            $reward         = $order['cost'] - $commission;
+
+
+            $isWorkerHoldOk = $worker['last_transaction_id'] === $order['transaction_id'] && $worker['hold'] === $reward;
+            if (!$isWorkerHoldOk && $worker['last_transaction_id'] === null) {
+                if (!$isWorkerHoldOk = m_User_hold_worker($order['worker_id'], $order['transaction_id'], $reward)) {
+                    response_error('Worker handle another transaction, skipping');
+
+                    return false;
+                }
+            }
+
+            if ($isWorkerHoldOk) {
+                if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_SENT)) {
+                    response_error('Unable to set transaction status to sent');
+                    return false;
+                }
+
+                $transaction['status'] = TRANSACTION_STATUS_SENT;
+            }
+        }
+
+        if ((int) $transaction['status'] === TRANSACTION_STATUS_SENT) {
+            $isUnholdHirer = m_User_unhold_hirer($order['hirer_id'], $order['transaction_id']);
+            if (!$isUnholdHirer) {
+                response_error('Unable to unhold hirer');
+                return false;
+            }
+
+            $isUnholdWorker = m_User_unhold_worker($order['worker_id'], $order['transaction_id']);
+            if (!$isUnholdWorker) {
+                response_error('Unable to unhold worker');
+                return false;
+            }
+
+            if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_DONE)) {
+                response_error('Unable to set transaction status');
+                return false;
+            }
+
+
+            $transaction['status'] = TRANSACTION_STATUS_DONE;
+            return true;
+
+        }
+
+        response_error('Not handled' . var_export($transaction, true));
+
+        return false;
+    }
+
+    response_error('Order not found');
+    return null;
 }
 

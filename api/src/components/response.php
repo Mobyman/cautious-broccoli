@@ -20,9 +20,9 @@ function response_respond(array $data, $isFail = false, $code = 400)
         : 200;
 
     echo json_encode($data);
-    exit(!$isFail
-        ? 0
-        : -1);
+
+    return $isFail ? -1 : 0;
+
 }
 
 /**

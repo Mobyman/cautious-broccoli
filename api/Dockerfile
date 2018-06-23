@@ -18,7 +18,9 @@ RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 RUN apt-get update \
     && mkdir -p /run/php \
     && apt-get install --no-install-recommends --no-install-suggests -y \
-    nginx php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql php${PHP_VER}-memcache php${PHP_VER}-mbstring php${PHP_VER}-curl php${PHP_VER}-dom php${PHP_VER}-zip
+    nginx php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql php${PHP_VER}-memcache php${PHP_VER}-mbstring php${PHP_VER}-curl php${PHP_VER}-dom php${PHP_VER}-zip php${PHP_VER}-uuid
+
+RUN rm -rf /var/lib/apt/lists/* /var/cache
 
 RUN useradd --uid 1001 -g www-data -s /bin/bash web -d /var/www/default \
     && mkdir -p /var/www/default \
@@ -29,13 +31,9 @@ COPY deploy/conf/php/ /etc/php/${PHP_VER}/
 COPY deploy/conf/supervisor/*.conf /etc/supervisor/conf.d/
 COPY deploy/conf/nginx/*.conf /etc/nginx/
 
-RUN rm -rf /var/lib/apt/lists/* /var/cache
-
-WORKDIR /root/app
+WORKDIR /var/www/default
 
 COPY deploy/entrypoint.sh /root/
 RUN chmod +x /root/entrypoint.sh
-
-VOLUME ["/root/app/src"]
 
 CMD ["/root/entrypoint.sh"]

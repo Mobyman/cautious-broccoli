@@ -13,8 +13,8 @@ function router_handle($body)
         'user.auth'     => 'user_auth',
         'order.create'  => 'order_create',
         'order.assign'  => 'order_assign',
-        'order.pay'     => 'order_pay',
         'order.list'    => 'order_list',
+        'order.handle'  => 'order_handle',
     ];
 
     $method = $body['method'];

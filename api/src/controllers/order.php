@@ -24,7 +24,7 @@ function order_create($params): array
             'type'     => 'cost',
             'required' => true,
             'range'    => [
-                0,
+                100,
                 PHP_INT_MAX,
             ],
         ],
@@ -84,3 +84,22 @@ function order_list($params): array
 
     return ['items' => $items];
 }
+
+
+function order_handle($params): array
+{
+    $ordersConnection = db_getConnection('order');
+    $orders = m_Order_get_unhandled();
+
+    $status = null;
+    while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
+        $status = m_Order_handle($row['id']);
+        break;
+    }
+
+    mysqli_free_result($orders);
+    mysqli_close($ordersConnection);
+
+    return ['status' => $status];
+}
+

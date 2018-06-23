@@ -6,8 +6,10 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use Codeception\Module\MultiDb;
 use Codeception\TestCase\Test;
+use Codeception\Util\Debug;
 use Faker\Factory;
 use PDO;
+use PHPUnit\Runner\Exception;
 
 
 class BaseTest extends Test
@@ -58,6 +60,40 @@ class BaseTest extends Test
         $pdo = $this->_multiDb->connections['transactionDb'];
         $pdo->query('TRUNCATE `transactions`');
     }
+
+    protected function getTransactionFromOrder($orderId)
+    {
+        $pdo = $this->_multiDb->connections['transactionDb'];
+        $s   = $pdo->prepare('SELECT * FROM `transactions` WHERE order_id=:order_id');
+        $s->execute([
+            ':order_id' => $orderId,
+        ]);
+
+        return $s->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected function getOrder($id)
+    {
+        $pdo = $this->_multiDb->connections['orderDb'];
+        $s   = $pdo->prepare('SELECT * FROM `orders` WHERE id=:id');
+        $s->execute([
+            ':id' => $id,
+        ]);
+
+        return $s->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected function getUser($id)
+    {
+        $pdo = $this->_multiDb->connections['userDb'];
+        $s   = $pdo->prepare('SELECT * FROM `users` WHERE id=:id');
+        $s->execute([
+            ':id' => $id,
+        ]);
+
+        return $s->fetch(PDO::FETCH_ASSOC);
+    }
+
 
     protected function request($method, $params)
     {

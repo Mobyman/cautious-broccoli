@@ -25,12 +25,12 @@ function cli_start($argc, $argv)
     }
 
     if ($argv[1] === 'transactions') {
-        echo 'Start handle transactions...' . PHP_EOL;
+        echo 'Start handle orders...' . PHP_EOL;
         $ordersConnection = db_getConnection('order');
         $orders = m_Order_get_unhandled();
 
         while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
-            var_dump($row);
+            m_Order_handle($row['id']);
         }
 
         mysqli_free_result($orders);

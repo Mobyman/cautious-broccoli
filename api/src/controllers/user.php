@@ -33,7 +33,7 @@ function user_register($params): array
         response_error('User already exists', 403);
     }
 
-    $status = m_User_insert($params['login'], $params['password'], $params['type']);
+    $status = m_User_create($params['login'], $params['password'], $params['type']);
 
     return ['status' => $status];
 }
