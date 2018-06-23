@@ -12,10 +12,10 @@ class OrderTest extends BaseTest
     {
         $token = $this->getToken(self::ROLE_HIRER);
         $this->request('order.create', [
-            'token' => $token,
-            'cost' => $this->_faker->numberBetween(100, 1000),
-            'title' => 'title',
-            'description' => 'description'
+            'token'       => $token,
+            'cost'        => $this->_faker->numberBetween(100, 1000),
+            'title'       => 'title',
+            'description' => 'description',
         ]);
         $this->tester->seeResponseJsonMatchesXpath('order_id');
         $this->tester->seeResponseContainsJson([
@@ -28,14 +28,14 @@ class OrderTest extends BaseTest
 
     public function testCreateAndAssign()
     {
-        $hirerToken = $this->getToken(self::ROLE_HIRER);
+        $hirerToken  = $this->getToken(self::ROLE_HIRER);
         $workerToken = $this->getToken(self::ROLE_WORKER);
 
         $this->request('order.create', [
-            'token' => $hirerToken,
-            'cost' => $this->_faker->numberBetween(100, 1000),
-            'title' => 'title',
-            'description' => 'description'
+            'token'       => $hirerToken,
+            'cost'        => $this->_faker->numberBetween(100, 1000),
+            'title'       => 'title',
+            'description' => 'description',
         ]);
         $this->tester->seeResponseJsonMatchesXpath('order_id');
         $this->tester->seeResponseContainsJson([
@@ -46,7 +46,7 @@ class OrderTest extends BaseTest
         $orderId = $this->tester->grabDataFromResponseByJsonPath('$.order_id')[0];
 
         $this->request('order.assign', [
-            'token' => $workerToken,
+            'token'    => $workerToken,
             'order_id' => $orderId,
         ]);
         $this->tester->seeResponseJsonMatchesXpath('order_id');
@@ -59,14 +59,14 @@ class OrderTest extends BaseTest
 
     public function testHandle()
     {
-        $hirerToken = $this->getToken(self::ROLE_HIRER);
+        $hirerToken  = $this->getToken(self::ROLE_HIRER);
         $workerToken = $this->getToken(self::ROLE_WORKER);
 
         $this->request('order.create', [
-            'token' => $hirerToken,
-            'cost' => 1000,
-            'title' => 'title',
-            'description' => 'description'
+            'token'       => $hirerToken,
+            'cost'        => 1000,
+            'title'       => 'title',
+            'description' => 'description',
         ]);
         $this->tester->seeResponseJsonMatchesXpath('order_id');
         $this->tester->seeResponseContainsJson([
@@ -77,7 +77,7 @@ class OrderTest extends BaseTest
         $orderId = $this->tester->grabDataFromResponseByJsonPath('$.order_id')[0];
 
         $this->request('order.assign', [
-            'token' => $workerToken,
+            'token'    => $workerToken,
             'order_id' => $orderId,
         ]);
         $this->tester->seeResponseJsonMatchesXpath('order_id');
@@ -87,32 +87,47 @@ class OrderTest extends BaseTest
             ],
         ]);
 
-        $this->request('order.handle', []);
+        while (1) {
 
-        $hirer = $this->getUser(1);
-        $this->assertEquals(0, $hirer['balance']);
-        $this->assertEquals(0, $hirer['hold']);
-        $this->assertEquals(null, $hirer['last_transaction_id']);
+            try {
+                $this->request('order.handle', []);
 
-        $worker= $this->getUser(2);
-        $this->assertEquals(950, $worker['balance']);
-        $this->assertEquals(0, $worker['hold']);
-        $this->assertEquals(null, $worker['last_transaction_id']);
+                $hirer = $this->getUser(1);
 
-        $transaction = $this->getTransactionFromOrder(1);
-        $this->assertEquals(3, $transaction['status']);
+                $this->assertEquals(0, $hirer['balance']);
+                $this->assertEquals(0, $hirer['hold']);
+                $this->assertEquals(null, $hirer['last_transaction_id']);
+
+                $worker = $this->getUser(2);
+                $this->assertEquals(950, $worker['balance']);
+                $this->assertEquals(0, $worker['hold']);
+                $this->assertEquals(null, $worker['last_transaction_id']);
+
+                $transaction = $this->getTransactionFromOrder(1);
+                $this->assertEquals(3, $transaction['status']);
+
+                if (!$this->hasFailed()) {
+                    break;
+                }
+
+            } catch (\Exception $e) {
+                sleep(3);
+            }
+
+        }
+
     }
 
     public function testNegativeCreateFromInvalidRole()
     {
-        $hirerToken = $this->getToken(self::ROLE_HIRER);
+        $hirerToken  = $this->getToken(self::ROLE_HIRER);
         $workerToken = $this->getToken(self::ROLE_WORKER);
 
         $this->request('order.create', [
-            'token' => $workerToken,
-            'cost' => $this->_faker->numberBetween(100, 1000),
-            'title' => 'title',
-            'description' => 'description'
+            'token'       => $workerToken,
+            'cost'        => $this->_faker->numberBetween(100, 1000),
+            'title'       => 'title',
+            'description' => 'description',
         ]);
         $this->tester->seeResponseContainsJson([
             'meta' => [
@@ -121,14 +136,14 @@ class OrderTest extends BaseTest
         ]);
 
         $this->request('order.create', [
-            'token' => $hirerToken,
-            'cost' => $this->_faker->numberBetween(100, 1000),
-            'title' => 'title',
-            'description' => 'description'
+            'token'       => $hirerToken,
+            'cost'        => $this->_faker->numberBetween(100, 1000),
+            'title'       => 'title',
+            'description' => 'description',
         ]);
         $orderId = $this->tester->grabDataFromResponseByJsonPath('$.order_id')[0];
         $this->request('order.assign', [
-            'token' => $hirerToken,
+            'token'    => $hirerToken,
             'order_id' => $orderId,
         ]);
         $this->tester->seeResponseContainsJson([
@@ -143,15 +158,15 @@ class OrderTest extends BaseTest
         $token = $this->getToken(self::ROLE_HIRER);
 
         $this->request('order.create', [
-            'token' => $token,
-            'cost' => $this->_faker->numberBetween(100, 1000),
-            'title' => implode(' ', $this->_faker->words(5)),
-            'description' => $this->_faker->paragraph(2)
+            'token'       => $token,
+            'cost'        => $this->_faker->numberBetween(100, 1000),
+            'title'       => implode(' ', $this->_faker->words(5)),
+            'description' => $this->_faker->paragraph(2),
         ]);
 
         $this->request('order.list', [
             'token' => $token,
-            'page' => 1,
+            'page'  => 1,
         ]);
         $this->tester->seeResponseContainsJson([
             'meta' => [

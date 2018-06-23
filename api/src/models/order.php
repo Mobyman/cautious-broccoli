@@ -28,7 +28,7 @@ function m_Order_create(int $hirerId, int $cost, string $title, string $descript
 
     mysqli_stmt_bind_param($s, 'iissi', $hirerId, $cost, $title, $description, $status);
     mysqli_stmt_execute($s);
-    $rows = mysqli_stmt_affected_rows($s);
+    $rows  = mysqli_stmt_affected_rows($s);
     $error = mysqli_error(db_getConnection('transaction'));
     mysqli_stmt_close($s);
 
@@ -49,7 +49,7 @@ function m_Order_assign(int $orderId, string $workerId)
     $s      = mysqli_prepare(db_getConnection('order'), $query);
     mysqli_stmt_bind_param($s, 'iii', $workerId, $orderId, $status);
     mysqli_stmt_execute($s);
-    $rows = mysqli_stmt_affected_rows($s);
+    $rows  = mysqli_stmt_affected_rows($s);
     $error = mysqli_error(db_getConnection('transaction'));
     mysqli_stmt_close($s);
 
@@ -75,7 +75,7 @@ function m_Order_generate_transaction_id(int $orderId)
     $s     = mysqli_prepare(db_getConnection('order'), $query);
     mysqli_stmt_bind_param($s, 'isii', $holdStatus, $packed, $orderId, $openedStatus);
     mysqli_stmt_execute($s);
-    $rows = mysqli_stmt_affected_rows($s);
+    $rows  = mysqli_stmt_affected_rows($s);
     $error = mysqli_error(db_getConnection('transaction'));
     mysqli_stmt_close($s);
     $error = mysqli_error(db_getConnection('order'));
@@ -143,7 +143,7 @@ function m_Order_list(int $page)
     }
 
     $orderIds = mysqli_fetch_array($result, MYSQLI_ASSOC);
-    $error = mysqli_error(db_getConnection('transaction'));
+    $error    = mysqli_error(db_getConnection('transaction'));
 
     if (!$orderIds) {
         return response_error('Orders not found', 404);
@@ -158,6 +158,12 @@ function m_Order_list(int $page)
     return $orders;
 }
 
+function crazy_monkey()
+{
+    if (mt_rand(0, 10) === 5) {
+        exit();
+    }
+}
 
 function m_Order_handle(int $orderId)
 {
@@ -170,6 +176,7 @@ function m_Order_handle(int $orderId)
                 return response_error('Unable to generate transaction id!');
             }
 
+            crazy_monkey();
             $order['transaction_id'] = $transactionId;
         }
 
@@ -178,10 +185,11 @@ function m_Order_handle(int $orderId)
             $transaction = m_Transaction_create($order['transaction_id'], 1, $orderId, TRANSACTION_STATUS_CREATED);
             if (!$transaction) {
                 response_error('Transaction not created');
+
                 return false;
             }
         }
-
+        crazy_monkey();
         if (!in_array((int) $transaction['status'], [
             TRANSACTION_STATUS_CREATED,
             TRANSACTION_STATUS_HOLD,
@@ -192,7 +200,7 @@ function m_Order_handle(int $orderId)
 
             return false;
         }
-
+        crazy_monkey();
         if ((int) $transaction['status'] === TRANSACTION_STATUS_CREATED) {
 
             $hirer = m_User_get_profile($order['hirer_id']);
@@ -206,12 +214,12 @@ function m_Order_handle(int $orderId)
             $isHirerHoldOk = $hirer['last_transaction_id'] === $order['transaction_id'];
             if (!$isHirerHoldOk && $hirer['last_transaction_id'] === null) {
 
-                if($hirer['balance'] < $order['cost']) {
+                if ($hirer['balance'] < $order['cost']) {
                     response_error('Insufficient hirer balance');
 
                     return false;
                 }
-
+                crazy_monkey();
                 if (!$isHirerHoldOk = m_User_hold_hirer($order['hirer_id'], $order['transaction_id'], $order['cost'])) {
                     response_error('Hirer handle another transaction, skipping');
 
@@ -229,6 +237,7 @@ function m_Order_handle(int $orderId)
                 $transaction['status'] = TRANSACTION_STATUS_HOLD;
             }
         }
+        crazy_monkey();
 
         if ((int) $transaction['status'] === TRANSACTION_STATUS_HOLD) {
             $worker = m_User_get_profile($order['worker_id']);
@@ -238,10 +247,10 @@ function m_Order_handle(int $orderId)
                 return false;
             }
 
-            $commission     = (int) (($order['cost'] / 100) * 5);
-            $reward         = $order['cost'] - $commission;
+            $commission = (int) (($order['cost'] / 100) * 5);
+            $reward     = $order['cost'] - $commission;
 
-
+            crazy_monkey();
             $isWorkerHoldOk = $worker['last_transaction_id'] === $order['transaction_id'] && $worker['hold'] === $reward;
             if (!$isWorkerHoldOk && $worker['last_transaction_id'] === null) {
                 if (!$isWorkerHoldOk = m_User_hold_worker($order['worker_id'], $order['transaction_id'], $reward)) {
@@ -250,37 +259,43 @@ function m_Order_handle(int $orderId)
                     return false;
                 }
             }
-
+            crazy_monkey();
             if ($isWorkerHoldOk) {
                 if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_SENT)) {
                     response_error('Unable to set transaction status to sent');
+
                     return false;
                 }
 
                 $transaction['status'] = TRANSACTION_STATUS_SENT;
             }
         }
+        crazy_monkey();
 
         if ((int) $transaction['status'] === TRANSACTION_STATUS_SENT) {
             $isUnholdHirer = m_User_unhold_hirer($order['hirer_id'], $order['transaction_id']);
             if (!$isUnholdHirer) {
                 response_error('Unable to unhold hirer');
+
                 return false;
             }
 
             $isUnholdWorker = m_User_unhold_worker($order['worker_id'], $order['transaction_id']);
             if (!$isUnholdWorker) {
                 response_error('Unable to unhold worker');
+
                 return false;
             }
-
+            crazy_monkey();
             if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_DONE)) {
                 response_error('Unable to set transaction status');
+
                 return false;
             }
 
 
             $transaction['status'] = TRANSACTION_STATUS_DONE;
+
             return true;
 
         }
@@ -291,6 +306,7 @@ function m_Order_handle(int $orderId)
     }
 
     response_error('Order not found');
+
     return null;
 }
 
