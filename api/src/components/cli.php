@@ -46,7 +46,6 @@ function cli_start($argc, $argv)
             sleep(5);
         }
 
-
     }
 
 

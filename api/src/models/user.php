@@ -25,7 +25,7 @@ function m_User_create(string $login, string $password, int $type): bool
 
     $defaultBalance = 0;
     if ($type === USER_ROLE_HIRER) {
-        $defaultBalance = C;
+        $defaultBalance = DEFAULT_HIRER_BALANCE;
     }
 
     mysqli_stmt_bind_param($s, 'ssii', $login, $hash, $type, $defaultBalance);

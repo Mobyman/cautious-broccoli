@@ -4,7 +4,7 @@
 
 //if (getenv('APPLICATION_ENV') === 'dev') {
     error_reporting(E_ALL ^ E_DEPRECATED);
-    ini_set('display_errors', 'On');
+//    ini_set('display_errors', 'On');
 //}
 
 include_once __DIR__ . '/../autoload.php';

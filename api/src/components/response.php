@@ -50,6 +50,7 @@ function response_error(string $data, int $code = 400)
     $error            = [];
     $error['message'] = $data;
     $error['debug']   = response_debug();
+    error_log($data);
 
     return response_respond($error, true, $code);
 }
