@@ -5,6 +5,7 @@ const USER_ROLE_HIRER  = 1;
 const USER_ROLE_WORKER = 2;
 
 const DEFAULT_HIRER_BALANCE = 100000;
+
 function m_User_init()
 {
     global $_db;
@@ -18,26 +19,33 @@ m_User_init();
 
 function m_User_create(string $login, string $password, int $type): bool
 {
-
-    $query = 'INSERT INTO `users` (login, password, type, balance) VALUES (?, ?, ?, ?);';
+    $query = 'INSERT INTO `users` (login, password, type, balance, hold, last_transaction_id) VALUES (?, ?, ?, ?, ?, ?);';
     $s     = mysqli_prepare(db_getConnection('user'), $query);
     $hash  = password_hash($password, PASSWORD_DEFAULT);
 
-    $defaultBalance = 0;
+    $hold                = 0;
+    $last_transaction_id = null;
+
+    $balance = 0;
     if ($type === USER_ROLE_HIRER) {
-        $defaultBalance = DEFAULT_HIRER_BALANCE;
+        $balance = DEFAULT_HIRER_BALANCE;
     }
 
-    mysqli_stmt_bind_param($s, 'ssii', $login, $hash, $type, $defaultBalance);
+    mysqli_stmt_bind_param($s, 'ssiiis', $login, $hash, $type, $balance, $hold, $last_transaction_id);
     mysqli_stmt_execute($s);
-    $rows = mysqli_stmt_affected_rows($s);
+    $rows  = mysqli_stmt_affected_rows($s);
+    $id    = mysqli_stmt_insert_id($s);
+    $error = mysqli_stmt_error($s);
     mysqli_stmt_close($s);
 
-    if (!$rows) {
-        response_error('Cannot insert row ' . mysqli_error(db_getConnection('user'), $query));
+    if (!$rows || $error) {
+        response_error('Cannot insert row ' . $error);
 
         return false;
     }
+
+    $profile = compact('id', 'login', 'type', 'balance', 'hold', 'last_transaction_id');
+    cache_set_model('user', $id, $profile);
 
     return true;
 }
@@ -58,27 +66,33 @@ function m_User_exists_login(string $login): bool
 
 function m_User_exists_login_password(string $login, string $password)
 {
-    $loginPasswordPair = $login . $password;
-    if ($cached = cache_get_model('auth', $loginPasswordPair)) {
-        return $cached;
+    $passwordHashCached = cache_get_model('auth', $login);
+
+    $id           = $passwordHash['id'] ?? null;
+    $passwordHash = $passwordHash['hash'] ?? null;
+
+    if (!$passwordHashCached) {
+        $query = 'SELECT id, password FROM `users` WHERE login=? LIMIT 1;';
+        $s     = mysqli_prepare(db_getConnection('user'), $query);
+
+        mysqli_stmt_bind_param($s, 's', $login);
+        mysqli_stmt_execute($s);
+        mysqli_stmt_bind_result($s, $id, $passwordHash);
+        mysqli_stmt_fetch($s);
+        mysqli_stmt_close($s);
+
+        cache_set_model('auth', $login, [
+            'id'   => $id,
+            'hash' => $passwordHash,
+        ]);
     }
 
-    $query = 'SELECT id, password FROM `users` WHERE login=? LIMIT 1;';
-    $s     = mysqli_prepare(db_getConnection('user'), $query);
-
-    mysqli_stmt_bind_param($s, 's', $login);
-    mysqli_stmt_execute($s);
-    mysqli_stmt_bind_result($s, $id, $hash);
-    $isOk = mysqli_stmt_fetch($s);
-    mysqli_stmt_close($s);
-
-    if ($isOk && !password_verify($password, $hash)) {
+    if (!password_verify($password, $passwordHash)) {
         // если пароль не подходит, мы это не кешируем,
         // это потенциальный вектор атаки, если не использовать капчу
         return null;
     }
 
-    cache_set_model('auth', $loginPasswordPair, $id);
 
     return $id;
 }
@@ -116,17 +130,18 @@ function m_User_get_profile(int $userId)
 
 function m_User_hold_hirer(int $userId, string $transactionId, string $cost)
 {
+    cache_del_model('user', $userId);
+
     $query        = 'UPDATE `users` SET hold=?, balance=balance+hold, last_transaction_id=? WHERE id=? AND balance>=? AND last_transaction_id IS NULL AND hold=0;';
     $s            = mysqli_prepare(db_getConnection('user'), $query);
     $negativeCost = -$cost;
     mysqli_stmt_bind_param($s, 'isii', $negativeCost, $transactionId, $userId, $cost);
     mysqli_stmt_execute($s);
-    $rows = mysqli_stmt_affected_rows($s);
-
-
+    $rows   = mysqli_stmt_affected_rows($s);
+    $errors = mysqli_stmt_error($s);
     mysqli_stmt_close($s);
 
-    if (!$rows) {
+    if (!$rows || $errors) {
         return false;
     }
 
@@ -135,6 +150,8 @@ function m_User_hold_hirer(int $userId, string $transactionId, string $cost)
 
 function m_User_hold_worker(int $userId, string $transactionId, string $cost)
 {
+    cache_del_model('user', $userId);
+
     $query = 'UPDATE `users` SET hold=?, last_transaction_id=? WHERE id=? AND last_transaction_id IS NULL;';
     $s     = mysqli_prepare(db_getConnection('user'), $query);
     mysqli_stmt_bind_param($s, 'isi', $cost, $transactionId, $userId);
@@ -151,14 +168,14 @@ function m_User_hold_worker(int $userId, string $transactionId, string $cost)
 
 function m_User_unhold_hirer(int $userId, string $transactionId)
 {
+    cache_del_model('user', $userId);
+
     $query = 'UPDATE `users` SET hold=0, last_transaction_id=null WHERE id=? AND last_transaction_id=?;';
     $s     = mysqli_prepare(db_getConnection('user'), $query);
     mysqli_stmt_bind_param($s, 'is', $userId, $transactionId);
     mysqli_stmt_execute($s);
     $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
-
-    cache_del_model('user', $userId);
 
     if (!$rows) {
         return false;
@@ -169,6 +186,8 @@ function m_User_unhold_hirer(int $userId, string $transactionId)
 
 function m_User_unhold_worker(int $userId, string $transactionId)
 {
+    cache_del_model('user', $userId);
+
     $query = 'UPDATE `users` SET balance=balance+hold, hold=0, last_transaction_id=null WHERE id=? AND last_transaction_id=?;';
     $s     = mysqli_prepare(db_getConnection('user'), $query);
     mysqli_stmt_bind_param($s, 'is', $userId, $transactionId);
@@ -176,7 +195,6 @@ function m_User_unhold_worker(int $userId, string $transactionId)
     $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
 
-    cache_del_model('user', $userId);
 
     if (!$rows) {
         return false;

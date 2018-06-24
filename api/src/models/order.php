@@ -19,48 +19,53 @@ function m_Order_init()
 
 m_Order_init();
 
-function m_Order_create(int $hirerId, int $cost, string $title, string $description)
+function m_Order_create(int $hirer_id, int $cost, string $title, string $description)
 {
     $status = ORDER_STATUS_OPENED;
 
     $query = 'INSERT INTO `orders` (hirer_id, `cost`, title, description, status) VALUES (?, ?, ?, ?, ?);';
     $s     = mysqli_prepare(db_getConnection('order'), $query);
 
-    mysqli_stmt_bind_param($s, 'iissi', $hirerId, $cost, $title, $description, $status);
+    mysqli_stmt_bind_param($s, 'iissi', $hirer_id, $cost, $title, $description, $status);
     mysqli_stmt_execute($s);
     $rows  = mysqli_stmt_affected_rows($s);
-    $error = mysqli_error(db_getConnection('transaction'));
+    $error = mysqli_stmt_error($s);
+    $id    = mysqli_stmt_insert_id($s);
     mysqli_stmt_close($s);
 
-    if (!$rows) {
-        response_error('Cannot insert row');
+    if (!$rows || $error) {
+        response_error('Cannot insert row' . $error);
 
         return false;
     }
 
-    return mysqli_insert_id(db_getConnection('order'));
+    $worker_id      = null;
+    $transaction_id = null;
+    $order          = compact('id', 'hirer_id', 'worker_id', 'cost', 'transaction_id', 'status', 'title',
+        'description');
+    cache_set_model('order', $id, $order);
+
+    return $id;
 }
 
 
-function m_Order_assign(int $orderId, string $workerId)
+function m_Order_assign(int $orderId, int $worker_id)
 {
+    cache_del_model('order', $orderId);
+
     $status = ORDER_STATUS_OPENED;
     $query  = 'UPDATE `orders` SET worker_id=?, status=1 WHERE id=? AND worker_id IS NULL AND status=?;';
     $s      = mysqli_prepare(db_getConnection('order'), $query);
-    mysqli_stmt_bind_param($s, 'iii', $workerId, $orderId, $status);
+    mysqli_stmt_bind_param($s, 'iii', $worker_id, $orderId, $status);
     mysqli_stmt_execute($s);
     $rows  = mysqli_stmt_affected_rows($s);
-    $error = mysqli_error(db_getConnection('transaction'));
+    $error = mysqli_stmt_error($s);
     mysqli_stmt_close($s);
 
-    if (!$rows) {
-        response_error('Order for assign not found');
+    if (!$rows || $error) {
+        response_error('Order for assign not found' . $error);
 
         return false;
-    }
-
-    if ($orderId) {
-        cache_del_model('order', $orderId);
     }
 
     return $orderId;
@@ -69,36 +74,38 @@ function m_Order_assign(int $orderId, string $workerId)
 
 function m_Order_generate_transaction_id(int $orderId)
 {
+    cache_del_model('order', $orderId);
 
-    $uuid         = str_replace('-', '', uuid_create());
-    $packed       = pack('h*', $uuid);
-    $openedStatus = ORDER_STATUS_RESOLVED;
-    $holdStatus   = ORDER_STATUS_HOLD;
+    $uuid                = str_replace('-', '', uuid_create());
+    $binaryTransactionId = pack('h*', $uuid);
+    $openedStatus        = ORDER_STATUS_RESOLVED;
+    $holdStatus          = ORDER_STATUS_HOLD;
 
     $query = 'UPDATE `orders` SET status=?, transaction_id=? WHERE id=? AND status=? AND transaction_id IS NULL;';
     $s     = mysqli_prepare(db_getConnection('order'), $query);
-    mysqli_stmt_bind_param($s, 'isii', $holdStatus, $packed, $orderId, $openedStatus);
+    mysqli_stmt_bind_param($s, 'isii', $holdStatus, $binaryTransactionId, $orderId, $openedStatus);
     mysqli_stmt_execute($s);
     $rows  = mysqli_stmt_affected_rows($s);
-    $error = mysqli_error(db_getConnection('transaction'));
+    $error = mysqli_stmt_error($s);
     mysqli_stmt_close($s);
-    $error = mysqli_error(db_getConnection('order'));
 
-    if ($error || !$rows) {
+    if (!$rows || $error) {
         response_error('Opened order not found' . $error ?? null);
 
         return false;
     }
 
-    return $packed;
+    return $binaryTransactionId;
 }
 
 function m_Order_close(int $orderId)
 {
-    $closeStatus  = ORDER_STATUS_CLOSED;
-    $holdStatus   = ORDER_STATUS_HOLD;
+    cache_del_model('order', $orderId);
 
-    $query = 'UPDATE `orders` SET status=?, transaction_id=null WHERE id=? AND status=? AND transaction_id IS NOT NULL;';
+    $closeStatus = ORDER_STATUS_CLOSED;
+    $holdStatus  = ORDER_STATUS_HOLD;
+
+    $query = 'UPDATE `orders` SET status=? WHERE id=? AND status=? AND transaction_id IS NOT NULL;';
     $s     = mysqli_prepare(db_getConnection('order'), $query);
     mysqli_stmt_bind_param($s, 'isi', $closeStatus, $orderId, $holdStatus);
     mysqli_stmt_execute($s);
@@ -106,7 +113,7 @@ function m_Order_close(int $orderId)
     $error = mysqli_error(db_getConnection('order'));
     mysqli_stmt_close($s);
 
-    if ($error || !$rows) {
+    if (!$rows || $error) {
         response_error('Holded order not found' . $error ?? null);
 
         return false;

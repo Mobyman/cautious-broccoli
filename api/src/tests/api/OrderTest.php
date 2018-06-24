@@ -64,7 +64,7 @@ class OrderTest extends BaseTest
 
         $this->request('order.create', [
             'token'       => $hirerToken,
-            'cost'        => 1000,
+            'cost'        => 100000,
             'title'       => 'title',
             'description' => 'description',
         ]);
@@ -96,7 +96,7 @@ class OrderTest extends BaseTest
         $this->assertEquals(null, $hirer['last_transaction_id']);
 
         $worker = $this->getUser(2);
-        $this->assertEquals(950, $worker['balance']);
+        $this->assertEquals(95000, $worker['balance']);
         $this->assertEquals(0, $worker['hold']);
         $this->assertEquals(null, $worker['last_transaction_id']);
 
