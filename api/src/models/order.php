@@ -59,6 +59,10 @@ function m_Order_assign(int $orderId, string $workerId)
         return false;
     }
 
+    if ($orderId) {
+        cache_del_model('order', $orderId);
+    }
+
     return $orderId;
 }
 
@@ -89,6 +93,28 @@ function m_Order_generate_transaction_id(int $orderId)
     return $packed;
 }
 
+function m_Order_close(int $orderId)
+{
+    $closeStatus  = ORDER_STATUS_CLOSED;
+    $holdStatus   = ORDER_STATUS_HOLD;
+
+    $query = 'UPDATE `orders` SET status=?, transaction_id=null WHERE id=? AND status=? AND transaction_id IS NOT NULL;';
+    $s     = mysqli_prepare(db_getConnection('order'), $query);
+    mysqli_stmt_bind_param($s, 'isi', $closeStatus, $orderId, $holdStatus);
+    mysqli_stmt_execute($s);
+    $rows  = mysqli_stmt_affected_rows($s);
+    $error = mysqli_error(db_getConnection('order'));
+    mysqli_stmt_close($s);
+
+    if ($error || !$rows) {
+        response_error('Holded order not found' . $error ?? null);
+
+        return false;
+    }
+
+    return $rows;
+}
+
 function m_Order_get_unhandled()
 {
     $query = 'SELECT id FROM `orders` WHERE status IN (1,2);';
@@ -107,7 +133,7 @@ function m_Order_get(int $orderId, $isWithCache = true)
         return $cached;
     }
 
-    $query = "SELECT * FROM `orders` WHERE id=$orderId ORDER BY id DESC;";
+    $query = "SELECT * FROM `orders` WHERE id=$orderId;";
 
     $result = mysqli_query(db_getConnection('order'), $query);
     if (!$result) {
@@ -151,7 +177,6 @@ function m_Order_list(int $page)
 
         $orderIds = array_column($orderIds, 'id');
         cache_set_model('orders', $page, $orderIds, 60);
-
     }
 
     $orders = [];
@@ -212,7 +237,7 @@ function m_Order_handle(int $orderId)
             if (!$isHirerHoldOk && $hirer['last_transaction_id'] === null) {
 
                 if ($hirer['balance'] < $order['cost']) {
-                    response_error('Insufficient hirer balance');
+                    response_error('Insufficient hirer balance: ' . $hirer['balance'] . ', needed ' . $order['cost']);
 
                     return false;
                 }
@@ -295,6 +320,10 @@ function m_Order_handle(int $orderId)
 
             return true;
 
+        }
+
+        if ($transaction['status'] === TRANSACTION_STATUS_DONE) {
+            m_Order_close($orderId);
         }
 
         response_error('Not handled' . var_export($transaction, true));

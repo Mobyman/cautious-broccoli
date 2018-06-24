@@ -25,21 +25,29 @@ function cli_start($argc, $argv)
     }
 
     if ($argv[1] === 'transactions') {
-        echo 'Start handle orders...' . PHP_EOL;
-        $ordersConnection = db_getConnection('order');
-        $orders = m_Order_get_unhandled();
 
-        while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
-            m_Order_handle($row['id']);
+        $begin = time();
+        $end   = $begin + 55;
+
+        while (1) {
+            echo 'Start handle orders...' . PHP_EOL;
+            $orders = m_Order_get_unhandled();
+
+            while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {
+                echo 'Handle order ' . $row['id'] . (string) m_Order_handle($row['id']) . PHP_EOL;
+            }
+
+            mysqli_free_result($orders);
+
+            if (time() > $end) {
+                exit(0);
+            }
+
+            sleep(5);
         }
 
-        mysqli_free_result($orders);
-        mysqli_close($ordersConnection);
 
-        exit(0);
     }
-
-
 
 
 }

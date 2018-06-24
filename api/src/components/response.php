@@ -21,7 +21,7 @@ function response_respond(array $data, $isFail = false, $code = 400)
 
     echo json_encode($data);
 
-    if($isFail) {
+    if($isFail && PHP_SAPI !== 'cli') {
         exit(-1);
     }
 

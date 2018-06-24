@@ -4,6 +4,7 @@
 const USER_ROLE_HIRER  = 1;
 const USER_ROLE_WORKER = 2;
 
+const DEFAULT_HIRER_BALANCE = 100000;
 function m_User_init()
 {
     global $_db;
@@ -24,7 +25,7 @@ function m_User_create(string $login, string $password, int $type): bool
 
     $defaultBalance = 0;
     if ($type === USER_ROLE_HIRER) {
-        $defaultBalance = 1000;
+        $defaultBalance = C;
     }
 
     mysqli_stmt_bind_param($s, 'ssii', $login, $hash, $type, $defaultBalance);
@@ -157,6 +158,8 @@ function m_User_unhold_hirer(int $userId, string $transactionId)
     $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
 
+    cache_del_model('user', $userId);
+
     if (!$rows) {
         return false;
     }
@@ -172,6 +175,8 @@ function m_User_unhold_worker(int $userId, string $transactionId)
     mysqli_stmt_execute($s);
     $rows = mysqli_stmt_affected_rows($s);
     mysqli_stmt_close($s);
+
+    cache_del_model('user', $userId);
 
     if (!$rows) {
         return false;

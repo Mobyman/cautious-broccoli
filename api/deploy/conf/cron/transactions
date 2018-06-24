@@ -1,0 +1,1 @@
+* * * * * root /usr/bin/flock -xn /var/lock/transactions -c "/usr/bin/php /var/www/default/web/index.php transactions >> /var/log/transactions.log 2>&1"

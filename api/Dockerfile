@@ -31,6 +31,10 @@ COPY deploy/conf/php/ /etc/php/${PHP_VER}/
 COPY deploy/conf/supervisor/*.conf /etc/supervisor/conf.d/
 COPY deploy/conf/nginx/*.conf /etc/nginx/
 
+COPY deploy/conf/cron/* /etc/cron.d/
+RUN /usr/bin/crontab /etc/cron.d/*
+RUN chmod 644 /etc/cron.d/*
+
 WORKDIR /var/www/default
 
 COPY deploy/entrypoint.sh /root/
