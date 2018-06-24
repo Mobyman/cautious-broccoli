@@ -62,7 +62,7 @@ function validator_validate(array $queryRules, array $params)
             $attributeValue = $params[ $attribute ] ?? null;
             if (!empty($rules[ $attributeRule ])) {
                 if (!$rules[ $attributeRule ]($attributeParam, $attributeValue)) {
-                    response_error('Invalid param! Attribute `' . $attribute . '` must be ' . $attributeRule . ': ' . json_encode($attributeParam));
+                    response_error('Неверный ввод! Атрибут `' . $attribute . '` должен быть ' . $attributeRule . ': ' . json_encode($attributeParam));
 
                     return false;
                 }

@@ -1,7 +1,11 @@
 <?php
 
-error_reporting(E_ALL ^ E_DEPRECATED);
-ini_set('display_errors', 'On');
+
+
+//if (getenv('APPLICATION_ENV') === 'dev') {
+    error_reporting(E_ALL ^ E_DEPRECATED);
+    ini_set('display_errors', 'On');
+//}
 
 include_once __DIR__ . '/../autoload.php';
 
@@ -14,7 +18,7 @@ if (PHP_SAPI === 'cli') {
 
     router_handle($request);
 
-    if(empty($request)) {
+    if (empty($request)) {
         echo response_error('Invalid method', 404);
     }
 

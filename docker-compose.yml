@@ -2,6 +2,8 @@ version: "3.3"
 services:
   api:
     build: api/.
+    hostname: api.vkdemo.local
+    domainname: api.vkdemo.local
     volumes:
       - type: bind
         source: ./api/src
@@ -13,6 +15,8 @@ services:
       - db-transaction
       - db-user
       - cache
+    environment:
+      APPLICATION_ENV: dev
   cache:
     image: memcached:latest
     networks:
@@ -52,15 +56,16 @@ services:
       MYSQL_ROOT_HOST: 172.*.*.*
   frontend:
       build: frontend/.
+      hostname: frontend.vkdemo.local
+      domainname: frontend.vkdemo.local
       volumes:
-        - type: bind
-          source: ./frontend/src
-          target: /root/app/src
+         - type: bind
+           source: ./frontend/src
+           target: /var/www/default
       networks:
         - freelance
       depends_on:
         - api
-
 networks:
   freelance:
     driver: bridge

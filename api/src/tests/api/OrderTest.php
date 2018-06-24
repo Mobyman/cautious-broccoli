@@ -87,34 +87,21 @@ class OrderTest extends BaseTest
             ],
         ]);
 
-        while (1) {
+        $this->request('order.handle', []);
 
-            try {
-                $this->request('order.handle', []);
+        $hirer = $this->getUser(1);
 
-                $hirer = $this->getUser(1);
+        $this->assertEquals(0, $hirer['balance']);
+        $this->assertEquals(0, $hirer['hold']);
+        $this->assertEquals(null, $hirer['last_transaction_id']);
 
-                $this->assertEquals(0, $hirer['balance']);
-                $this->assertEquals(0, $hirer['hold']);
-                $this->assertEquals(null, $hirer['last_transaction_id']);
+        $worker = $this->getUser(2);
+        $this->assertEquals(950, $worker['balance']);
+        $this->assertEquals(0, $worker['hold']);
+        $this->assertEquals(null, $worker['last_transaction_id']);
 
-                $worker = $this->getUser(2);
-                $this->assertEquals(950, $worker['balance']);
-                $this->assertEquals(0, $worker['hold']);
-                $this->assertEquals(null, $worker['last_transaction_id']);
-
-                $transaction = $this->getTransactionFromOrder(1);
-                $this->assertEquals(3, $transaction['status']);
-
-                if (!$this->hasFailed()) {
-                    break;
-                }
-
-            } catch (\Exception $e) {
-                sleep(3);
-            }
-
-        }
+        $transaction = $this->getTransactionFromOrder(1);
+        $this->assertEquals(3, $transaction['status']);
 
     }
 

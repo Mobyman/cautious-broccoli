@@ -36,4 +36,6 @@ WORKDIR /var/www/default
 COPY deploy/entrypoint.sh /root/
 RUN chmod +x /root/entrypoint.sh
 
+EXPOSE 80
+
 CMD ["/root/entrypoint.sh"]

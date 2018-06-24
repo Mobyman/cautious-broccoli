@@ -21,6 +21,10 @@ function response_respond(array $data, $isFail = false, $code = 400)
 
     echo json_encode($data);
 
+    if($isFail) {
+        exit(-1);
+    }
+
     return $isFail ? -1 : 0;
 
 }

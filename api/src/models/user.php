@@ -1,7 +1,7 @@
 <?php
 
 
-const USER_ROLE_HIRER = 1;
+const USER_ROLE_HIRER  = 1;
 const USER_ROLE_WORKER = 2;
 
 function m_User_init()
@@ -68,10 +68,10 @@ function m_User_exists_login_password(string $login, string $password)
     mysqli_stmt_bind_param($s, 's', $login);
     mysqli_stmt_execute($s);
     mysqli_stmt_bind_result($s, $id, $hash);
-    mysqli_stmt_fetch($s);
+    $isOk = mysqli_stmt_fetch($s);
     mysqli_stmt_close($s);
 
-    if (!password_verify($password, $hash)) {
+    if ($isOk && !password_verify($password, $hash)) {
         // если пароль не подходит, мы это не кешируем,
         // это потенциальный вектор атаки, если не использовать капчу
         return null;
@@ -82,21 +82,28 @@ function m_User_exists_login_password(string $login, string $password)
     return $id;
 }
 
-function m_User_get_profile($userId)
+function m_User_get_profile(int $userId)
 {
-    $userId = (int) $userId;
     if ($cached = cache_get_model('user', $userId)) {
         return $cached;
     }
 
-    $query = "SELECT * FROM `users` WHERE id=$userId;";
+    $query = 'SELECT id,login,type,balance,hold,last_transaction_id FROM `users` WHERE id=? LIMIT 1;';
+    $s     = mysqli_prepare(db_getConnection('user'), $query);
 
-    $result = mysqli_query(db_getConnection('user'), $query);
-    if (!$result) {
-        return response_error(mysqli_error(db_getConnection('order')));
+    mysqli_stmt_bind_param($s, 'i', $userId);
+    mysqli_stmt_execute($s);
+    mysqli_stmt_bind_result($s, $id, $login, $type, $balance, $hold, $last_transaction_id);
+    mysqli_stmt_fetch($s);
+    $error = mysqli_stmt_error($s);
+    mysqli_stmt_close($s);
+
+    if ($error) {
+        return response_error($error);
     }
 
-    $profile = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    $profile = compact('id', 'login', 'type', 'balance', 'hold', 'last_transaction_id');
+
     if (!$profile) {
         return response_error('Empty profile');
     }
@@ -127,7 +134,6 @@ function m_User_hold_hirer(int $userId, string $transactionId, string $cost)
 
 function m_User_hold_worker(int $userId, string $transactionId, string $cost)
 {
-    $hold  = TRANSACTION_STATUS_CREATED;
     $query = 'UPDATE `users` SET hold=?, last_transaction_id=? WHERE id=? AND last_transaction_id IS NULL;';
     $s     = mysqli_prepare(db_getConnection('user'), $query);
     mysqli_stmt_bind_param($s, 'isi', $cost, $transactionId, $userId);

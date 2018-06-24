@@ -35,7 +35,7 @@ function order_create($params): array
         response_error('You must be hirer for create orders!', 403);
     }
 
-    $orderId = m_Order_create(user_get_id(), $req['cost'], $req['title'], $req['description']);
+    $orderId = m_Order_create(request_user_get_id(), $req['cost'], $req['title'], $req['description']);
 
     return ['order_id' => $orderId];
 }
@@ -59,7 +59,7 @@ function order_assign($params): array
         response_error('You must be worker for assign orders!', 403);
     }
 
-    $orderId = m_Order_assign($req['order_id'], user_get_id());
+    $orderId = m_Order_assign($req['order_id'], request_user_get_id());
 
     return ['order_id' => $orderId];
 }
@@ -74,7 +74,10 @@ function order_list($params): array
         'page'  => [
             'type'    => 'number',
             'default' => 0,
-            'range' => [1, null],
+            'range'   => [
+                1,
+                null,
+            ],
         ],
     ], $params);
 
@@ -85,11 +88,33 @@ function order_list($params): array
     return ['items' => $items];
 }
 
+function order_get($params): array
+{
+    $req = request_handle([
+        'token' => [
+            'type'     => 'string',
+            'required' => true,
+        ],
+        'id'    => [
+            'type'     => 'number',
+            'required' => true,
+            'range'    => [
+                1,
+                null,
+            ],
+        ],
+    ], $params);
+
+    $order = m_Order_get($req['id']);
+
+    return ['item' => $order];
+}
+
 
 function order_handle($params): array
 {
     $ordersConnection = db_getConnection('order');
-    $orders = m_Order_get_unhandled();
+    $orders           = m_Order_get_unhandled();
 
     $status = null;
     while ($row = mysqli_fetch_array($orders, MYSQLI_ASSOC)) {

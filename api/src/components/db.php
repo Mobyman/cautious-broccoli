@@ -19,20 +19,26 @@ function db_getConnection($name)
             return $_db['_connections'][ $name ];
         }
 
-        // @formatter:off
-        $_db['_connections'][$name] = mysqli_connect(
-            getConfig()['db'][ $name ]['host'],
-            getConfig()['db'][ $name ]['user'] ?? DEFAULT_USER,
-            getConfig()['db'][ $name ]['password'] ?? DEFAULT_PASSWORD,
-            getConfig()['db'][ $name ]['database'],
-            getConfig()['db'][ $name ]['port'] ?? DEFAULT_PORT
-        );
-        // @formatter:on
+        try {
+            // @formatter:off
+            $_db['_connections'][$name] = mysqli_connect(
+                getConfig()['db'][ $name ]['host'],
+                getConfig()['db'][ $name ]['user'] ?? DEFAULT_USER,
+                getConfig()['db'][ $name ]['password'] ?? DEFAULT_PASSWORD,
+                getConfig()['db'][ $name ]['database'],
+                getConfig()['db'][ $name ]['port'] ?? DEFAULT_PORT
+            );
+            // @formatter:on
 
-        if ($error = mysqli_connect_errno()) {
-            response_error('DB error: ' . $error . mysqli_connect_error());
+            if ($error = mysqli_connect_errno()) {
+                error_log(mysqli_connect_error());
+                response_error('DB error');
+            }
+
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            response_error('DB error');
         }
-
 
         if (!$_db['_connections'][ $name ]) {
             response_error('Unable to connect database');

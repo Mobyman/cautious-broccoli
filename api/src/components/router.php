@@ -11,9 +11,11 @@ function router_handle($body)
     $router['_routes'] = [
         'user.register' => 'user_register',
         'user.auth'     => 'user_auth',
+        'user.profile'  => 'user_profile',
         'order.create'  => 'order_create',
         'order.assign'  => 'order_assign',
         'order.list'    => 'order_list',
+        'order.get'     => 'order_get',
         'order.handle'  => 'order_handle',
     ];
 

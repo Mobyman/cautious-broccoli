@@ -30,7 +30,7 @@ function user_register($params): array
     $isAlreadyRegister = m_User_exists_login($params['login']);
 
     if ($isAlreadyRegister) {
-        response_error('User already exists', 403);
+        response_error('Пользователь с таким именем уже есть.', 403);
     }
 
     $status = m_User_create($params['login'], $params['password'], $params['type']);
@@ -54,7 +54,7 @@ function user_auth($params): array
         ],
     ], $params);
 
-    $userId = m_User_exists_login_password($params['login'], $params['password']);
+    $userId = m_User_exists_login_password($req['login'], $req['password']);
 
     if (!$userId) {
         response_error('User not found', 404);
@@ -72,27 +72,18 @@ function user_auth($params): array
 
 }
 
+function user_profile($params) {
+    $req = request_handle([
+        'token' => [
+            'type'     => 'string',
+            'required' => true,
+        ],
+    ], $params);
 
-function user_get_id() {
-    global $_user;
-
-    if(empty($_user['id'])) {
-        response_error('Unauthorized', 403);
-    }
-
-    return $_user['id'];
+    $profile = user_init_profile();
+    return ['profile' => $profile];
 }
 
-function user_profile()
-{
-    global $_user;
-
-    if (empty($_user['profile'])) {
-        $_user['profile'] = m_User_get_profile(user_get_id());
-    }
-
-    return $_user['profile'];
-}
 
 function user_role_is($role)
 {
@@ -100,11 +91,12 @@ function user_role_is($role)
         'hirer'  => 1,
         'worker' => 2,
     ];
+
     if (empty($roles[ $role ])) {
         response_error('Invalid role param');
     }
 
-    $profile = user_profile();
+    $profile = user_init_profile();
 
     return (int) $profile['type'] === $roles[ $role ];
 }

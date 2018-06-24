@@ -101,23 +101,21 @@ function m_Order_get_unhandled()
     return $result;
 }
 
-function m_Order_get($orderId, $isWithCache = true)
+function m_Order_get(int $orderId, $isWithCache = true)
 {
-    $orderId = (int) $orderId;
     if ($isWithCache && $cached = cache_get_model('order', $orderId)) {
         return $cached;
     }
 
-    $query = "SELECT * FROM `orders` WHERE id=$orderId;";
+    $query = "SELECT * FROM `orders` WHERE id=$orderId ORDER BY id DESC;";
 
     $result = mysqli_query(db_getConnection('order'), $query);
-
     if (!$result) {
         return response_error(mysqli_error(db_getConnection('order')));
     }
 
     $order = mysqli_fetch_array($result, MYSQLI_ASSOC);
-    $error = mysqli_error(db_getConnection('transaction'));
+    $error = mysqli_error(db_getConnection('order'));
 
     if (!$order) {
         return response_error('Empty order');
@@ -130,40 +128,40 @@ function m_Order_get($orderId, $isWithCache = true)
 
 function m_Order_list(int $page)
 {
-    $status = ORDER_STATUS_OPENED;
-    $offset = 0;
-    if ($page) {
-        $offset = (PAGE_SIZE * $page);
-    }
-
-    $query  = 'SELECT id FROM `orders` WHERE status=' . $status . ' LIMIT ' . $offset . ',' . PAGE_SIZE;
-    $result = mysqli_query(db_getConnection('order'), $query);
-    if (!$result) {
-        return response_error(mysqli_error(db_getConnection('order')));
-    }
-
-    $orderIds = mysqli_fetch_array($result, MYSQLI_ASSOC);
-    $error    = mysqli_error(db_getConnection('transaction'));
-
+    $orderIds = cache_get_model('orders', $page);
     if (!$orderIds) {
-        return response_error('Orders not found', 404);
-    }
+        $status = ORDER_STATUS_OPENED;
+        $offset = 0;
+        if ($page) {
+            $offset = (PAGE_SIZE * $page);
+        }
 
+        $query  = 'SELECT id FROM `orders` WHERE status=' . $status . ' LIMIT ' . $offset . ',' . PAGE_SIZE;
+        $result = mysqli_query(db_getConnection('order'), $query);
+        if (!$result) {
+            return response_error(mysqli_error(db_getConnection('order')));
+        }
+
+        $orderIds = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $error    = mysqli_error(db_getConnection('transaction'));
+
+        if (!$orderIds) {
+            return response_error('Orders not found', 404);
+        }
+
+        $orderIds = array_column($orderIds, 'id');
+        cache_set_model('orders', $page, $orderIds, 60);
+
+    }
 
     $orders = [];
-    foreach ($orderIds as $orderId) {
-        $orders[] = m_Order_get($orderId);
+    foreach ($orderIds as $order) {
+        $orders[] = m_Order_get($order);
     }
 
     return $orders;
 }
 
-function crazy_monkey()
-{
-    if (mt_rand(0, 10) === 5) {
-        exit();
-    }
-}
 
 function m_Order_handle(int $orderId)
 {
@@ -176,7 +174,6 @@ function m_Order_handle(int $orderId)
                 return response_error('Unable to generate transaction id!');
             }
 
-            crazy_monkey();
             $order['transaction_id'] = $transactionId;
         }
 
@@ -189,7 +186,7 @@ function m_Order_handle(int $orderId)
                 return false;
             }
         }
-        crazy_monkey();
+
         if (!in_array((int) $transaction['status'], [
             TRANSACTION_STATUS_CREATED,
             TRANSACTION_STATUS_HOLD,
@@ -200,7 +197,7 @@ function m_Order_handle(int $orderId)
 
             return false;
         }
-        crazy_monkey();
+
         if ((int) $transaction['status'] === TRANSACTION_STATUS_CREATED) {
 
             $hirer = m_User_get_profile($order['hirer_id']);
@@ -219,7 +216,7 @@ function m_Order_handle(int $orderId)
 
                     return false;
                 }
-                crazy_monkey();
+
                 if (!$isHirerHoldOk = m_User_hold_hirer($order['hirer_id'], $order['transaction_id'], $order['cost'])) {
                     response_error('Hirer handle another transaction, skipping');
 
@@ -237,7 +234,7 @@ function m_Order_handle(int $orderId)
                 $transaction['status'] = TRANSACTION_STATUS_HOLD;
             }
         }
-        crazy_monkey();
+
 
         if ((int) $transaction['status'] === TRANSACTION_STATUS_HOLD) {
             $worker = m_User_get_profile($order['worker_id']);
@@ -250,7 +247,7 @@ function m_Order_handle(int $orderId)
             $commission = (int) (($order['cost'] / 100) * 5);
             $reward     = $order['cost'] - $commission;
 
-            crazy_monkey();
+
             $isWorkerHoldOk = $worker['last_transaction_id'] === $order['transaction_id'] && $worker['hold'] === $reward;
             if (!$isWorkerHoldOk && $worker['last_transaction_id'] === null) {
                 if (!$isWorkerHoldOk = m_User_hold_worker($order['worker_id'], $order['transaction_id'], $reward)) {
@@ -259,7 +256,7 @@ function m_Order_handle(int $orderId)
                     return false;
                 }
             }
-            crazy_monkey();
+
             if ($isWorkerHoldOk) {
                 if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_SENT)) {
                     response_error('Unable to set transaction status to sent');
@@ -270,7 +267,7 @@ function m_Order_handle(int $orderId)
                 $transaction['status'] = TRANSACTION_STATUS_SENT;
             }
         }
-        crazy_monkey();
+
 
         if ((int) $transaction['status'] === TRANSACTION_STATUS_SENT) {
             $isUnholdHirer = m_User_unhold_hirer($order['hirer_id'], $order['transaction_id']);
@@ -286,7 +283,7 @@ function m_Order_handle(int $orderId)
 
                 return false;
             }
-            crazy_monkey();
+
             if (!m_Transaction_set_status($order['transaction_id'], TRANSACTION_STATUS_DONE)) {
                 response_error('Unable to set transaction status');
 
