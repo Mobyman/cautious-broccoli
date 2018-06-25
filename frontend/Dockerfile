@@ -14,6 +14,9 @@ ENV LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" TERM="xterm"
 RUN apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y nginx
 
+RUN curl -sL https://deb.nodesource.com/setup_9.x | bash - && \
+           apt-get install -y nodejs
+
 RUN rm -rf /var/lib/apt/lists/* /var/cache
 
 RUN useradd --uid 1001 -g www-data -s /bin/bash web -d /var/www/default \

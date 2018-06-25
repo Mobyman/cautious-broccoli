@@ -1,0 +1,25 @@
+<div class="col-md-10">
+    <h5>Создать заказ</h5>
+    <form id="title-form" class="form-horizontal" role="form" ng-submit="submit()">
+        <div class="form-group mt-3">
+            <input ng-model="model.title" id="title" type="text" class="form-control" name="title" placeholder="Заголовок" required>
+        </div>
+
+        <div class="form-group mt-3">
+            <textarea rows="7" ng-model="model.description" id="description" type="description" class="form-control" name="description" placeholder="Описание"></textarea>
+        </div>
+
+
+        <div class="form-group mt-3">
+            <input ng-model="model.cost" type="number" id="cost" class="form-control" name="title" placeholder="Стоимость, ₽" required min="0">
+        </div>
+
+        <div class="text-danger" ng-if="model.error">{{ model.error }}</div>
+
+        <div class="form-group mt-3">
+            <button type="submit" class="btn btn-sm btn-success">Создать</button>
+        </div>
+
+
+    </form>
+</div>

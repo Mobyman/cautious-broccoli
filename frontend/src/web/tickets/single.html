@@ -1,0 +1,16 @@
+<div class="col-md-12">
+        <div class="ticket col-md-12" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
+            <div class="row">
+                <div class="col-md-10 ticket-title">{{model.title}}</div>
+                <div class="col-md-2 text-success">{{model.cost}}₽</div>
+            </div>
+            <div class="row">
+                <small class="col-md-10 ticket-description">{{ model.description }}</small>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-2">
+                    <button class="ticket-assign btn btn-success" ng-if="profile.type==2" ng-click="assign(model.id, $event)">Выполнить {{ model.cost }}₽</button>
+                </div>
+            </div>
+        </div>
+</div>

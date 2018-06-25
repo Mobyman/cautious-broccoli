@@ -1,0 +1,100 @@
+body {
+    margin: 0;
+    background: #EDEEF0;
+    font-family: Roboto, Helvetica Neue, sans-serif;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+.content {
+    margin: 0 auto;
+
+    background: #FFF;
+    padding: 30px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 3px;
+}
+
+.topnav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    background-color: #4A76A8;
+    z-index: 1;
+}
+
+.topnav a, .topnav span {
+    float: left;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.topnav a:hover {
+    background-color: #3D6898;
+}
+
+.topnav a.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-success {
+    background-color: #5181b8;
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #5b88bd;
+    border: none
+}
+
+.btn-success:not(:disabled):not(.disabled).active:focus, .btn-success:not(:disabled):not(.disabled):active:focus, .show > .btn-success.dropdown-toggle:focus {
+    background-color: #4872a3;
+    box-shadow: none;
+
+}
+
+.btn-success:focus {
+    box-shadow: none;
+}
+
+.ticket {
+    background: #f9f9f9;
+    padding: 15px;
+}
+
+.ticket-title {
+    font-size: 20px;
+    color: #000;
+}
+
+.ticket-description {
+    font-size: 13px;
+    color: #999999;
+}
+
+.ticket-assign {
+    font-size: 12px;
+}
+
+.ticket-loader {
+    margin-top: 10px;
+    border: 1px solid #eee;
+    height: 70px;
+    color: #ccc
+}
+
+.ticker-owner {
+    background-color: #fff3cd;
+}
+
