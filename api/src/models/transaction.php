@@ -11,13 +11,16 @@ function m_Transaction_init()
 
     $_db['_connections']['transaction'] = db_getConnection('transaction');
     if (empty($_db['_connections'])) {
-        response_error('Unable to connect database');
+        return response_error('Unable to connect database');
     }
 }
 
 m_Transaction_init();
 
-
+/**
+ * @param $transactionId
+ * @return array|null
+ */
 function m_Transaction_get($transactionId)
 {
     $query = 'SELECT id,type,order_id,status FROM `transactions` WHERE id=?;';
@@ -42,6 +45,13 @@ function m_Transaction_get($transactionId)
     return null;
 }
 
+/**
+ * @param string $id
+ * @param int $type
+ * @param int $order_id
+ * @param int $status
+ * @return array|bool|null
+ */
 function m_Transaction_create(string $id, int $type, int $order_id, int $status)
 {
     $query = 'INSERT INTO `transactions` (id, type, order_id, status) VALUES (?, ?, ?, ?);';
@@ -53,9 +63,7 @@ function m_Transaction_create(string $id, int $type, int $order_id, int $status)
     mysqli_stmt_close($s);
 
     if ($error || !$rows) {
-        response_error('Cannot create transaction ' . $error);
-
-        return false;
+        return response_error('Cannot create transaction ' . $error);
     }
 
     if ($rows) {
@@ -65,6 +73,11 @@ function m_Transaction_create(string $id, int $type, int $order_id, int $status)
     return null;
 }
 
+/**
+ * @param string $transactionId
+ * @param int $status
+ * @return bool
+ */
 function m_Transaction_set_status(string $transactionId, int $status)
 {
     $query = 'UPDATE `transactions` SET status=? WHERE id=? AND status<?;';

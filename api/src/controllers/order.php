@@ -3,6 +3,10 @@
 const ROLE_WORKER = 'worker';
 const ROLE_HIRER  = 'hirer';
 
+/**
+ * @param $params
+ * @return array
+ */
 function order_create($params): array
 {
     $req = request_handle([
@@ -30,9 +34,8 @@ function order_create($params): array
         ],
     ], $params);
 
-    $isHirer = user_role_is(ROLE_HIRER);
-    if (!$isHirer) {
-        response_error('You must be hirer for create orders!', 403);
+    if (!user_role_is(ROLE_HIRER)) {
+        return response_error('You must be hirer for create orders!', 403);
     }
 
     $orderId = m_Order_create(request_user_get_id(), $req['cost'], $req['title'], $req['description']);
@@ -40,6 +43,10 @@ function order_create($params): array
     return ['order_id' => $orderId];
 }
 
+/**
+ * @param $params
+ * @return array
+ */
 function order_assign($params): array
 {
     $req = request_handle([
@@ -56,7 +63,7 @@ function order_assign($params): array
 
     $isWorker = user_role_is(ROLE_WORKER);
     if (!$isWorker) {
-        response_error('You must be worker for assign orders!', 403);
+        return response_error('You must be worker for assign orders!', 403);
     }
 
     $orderId = m_Order_assign($req['order_id'], request_user_get_id());
@@ -64,6 +71,10 @@ function order_assign($params): array
     return ['order_id' => $orderId];
 }
 
+/**
+ * @param $params
+ * @return array
+ */
 function order_list($params): array
 {
     $req = request_handle([
@@ -88,6 +99,10 @@ function order_list($params): array
     return ['items' => $items];
 }
 
+/**
+ * @param $params
+ * @return array
+ */
 function order_get($params): array
 {
     $req = request_handle([
@@ -110,7 +125,10 @@ function order_get($params): array
     return ['item' => $order];
 }
 
-
+/**
+ * @param $params
+ * @return array
+ */
 function order_handle($params): array
 {
     $ordersConnection = db_getConnection('order');

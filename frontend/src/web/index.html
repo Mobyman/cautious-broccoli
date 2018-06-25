@@ -9,27 +9,26 @@
 
     <title>ВФрилансе</title>
 
-    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
 </head>
 
 <body>
 
 <div class="topnav" ng-controller="topBarController">
-    <a href="#">Список задач</a>
-    <a href="#!/create" ng-if="profile.type==1">Создать заказ</a>
-
-    <a class="float-right" ng-if="profile.login" href="#!/logout">Выйти</a>
-    <span class="float-right" ng-if="profile.login">Вы вошли как {{ profile.login }} ({{ types[profile.type] }})</span>
-    <span class="float-right">Ваш баланс: {{ profile.balance }}</span>
+    <a ng-if="profile" href="#">Список задач</a>
+    <a ng-if="profile.type==1" href="#!/create">Создать заказ</a>
+    <a ng-if="profile.login" class="float-right" href="#!/logout">Выйти</a>
+    <span ng-if="profile.login" class="float-right">Вы вошли как {{ profile.login }} ({{ types[profile.type] }})</span>
+    <span ng-if="profile" class="float-right">Ваш баланс: {{ profile.balance }}</span>
 </div>
 
 <div class="content mt-5 offset-4 col-md-5" ng-view></div>
 
-<script src="bower_components/angular/angular.min.js"></script>
-<script src="bower_components/angular-route/angular-route.js"></script>
-<script src="bower_components/angular-cookies/angular-cookies.min.js"></script>
-<script src="bower_components/ngInfiniteScroll/build/ng-infinite-scroll.min.js"></script>
+<script src="lib/angular/angular.min.js"></script>
+<script src="lib/angular-route/angular-route.min.js"></script>
+<script src="lib/angular-cookies/angular-cookies.min.js"></script>
+<script src="lib/ng-infinite-scroll/build/ng-infinite-scroll.min.js"></script>
 
 <script src="app.js"></script>
 <script src="login/login.js"></script>

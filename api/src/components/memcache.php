@@ -11,6 +11,9 @@ function cache_init()
     // @formatter:on
 }
 
+/**
+ * @return mixed
+ */
 function getConnection()
 {
     global $_db;
@@ -24,8 +27,9 @@ cache_init();
  * @param      $key
  * @param      $value
  * @param null $ttl
+ * @return bool
  */
-function cache_set($key, $value, $ttl = null)
+function cache_set($key, $value, $ttl = null): bool
 {
     return memcache_set(getConnection(), $key, $value, 0, $ttl);
 }
@@ -33,7 +37,7 @@ function cache_set($key, $value, $ttl = null)
 /**
  * @param $key
  *
- * @return null|string
+ * @return null|mixed
  */
 function cache_get($key)
 {

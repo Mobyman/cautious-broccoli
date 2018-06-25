@@ -1,5 +1,7 @@
 <?php
 
+const SESSION_TTL = 86400;
+
 /**
  * @param $userId
  * @param $token
@@ -13,9 +15,8 @@ function session_set($userId, $token)
     cache_set($token, [
         'ip'      => $_SERVER['REMOTE_ADDR'],
         'user_id' => $userId,
-    ], 86400);
-
-    cache_set($userId, $token, 86400);
+    ], SESSION_TTL);
+    cache_set($userId, $token, SESSION_TTL);
 }
 
 /**

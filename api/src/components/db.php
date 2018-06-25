@@ -32,16 +32,16 @@ function db_getConnection($name)
 
             if ($error = mysqli_connect_errno()) {
                 error_log(mysqli_connect_error());
-                response_error('DB error');
+                return response_error('DB error');
             }
 
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            response_error('DB error');
+            return response_error('DB error');
         }
 
         if (!$_db['_connections'][ $name ]) {
-            response_error('Unable to connect database');
+            return response_error('Unable to connect database');
         }
 
         return $_db['_connections'][ $name ];

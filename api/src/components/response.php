@@ -2,16 +2,15 @@
 
 /**
  * @param array $data
- *
  * @param bool  $isFail
- *
  * @param int   $code
  *
  * @return null
  */
 function response_respond(array $data, $isFail = false, $code = 400)
 {
-    if (PHP_SAPI !== 'cli') {
+    $isCli = PHP_SAPI === 'cli';
+    if (!$isCli) {
         header('Content-Type:application/json');
     }
 
@@ -21,11 +20,11 @@ function response_respond(array $data, $isFail = false, $code = 400)
 
     echo json_encode($data);
 
-    if($isFail && PHP_SAPI !== 'cli') {
+    if($isFail && !$isCli) {
         exit(-1);
     }
 
-    return $isFail ? -1 : 0;
+    return $isFail ? null : true;
 
 }
 

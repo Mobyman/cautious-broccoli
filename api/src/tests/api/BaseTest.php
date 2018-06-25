@@ -40,6 +40,9 @@ class BaseTest extends Test
         $this->clearUsersDb();
         $this->clearOrdersDb();
         $this->clearTransactionsDb();
+
+        $memcache = memcache_connect('cache', 11211);
+        memcache_flush($memcache);
     }
 
     protected function clearUsersDb()

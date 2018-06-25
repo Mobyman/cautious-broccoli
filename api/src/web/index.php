@@ -13,13 +13,12 @@ if (PHP_SAPI === 'cli') {
     cli_start($argc, $argv);
 } else {
 
-
     $request = request_post();
 
     router_handle($request);
 
     if (empty($request)) {
-        echo response_error('Invalid method', 404);
+        return response_error('Invalid method', 404);
     }
 
 }

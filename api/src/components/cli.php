@@ -5,14 +5,14 @@
  */
 function cli_log(string $string)
 {
-    echo time() . ' ' . $string . PHP_EOL;
+    echo date('d.m.Y H:i:s') . ' ' . $string . PHP_EOL;
 }
 
 /**
  * @param $argc
  * @param $argv
  */
-function cli_start($argc, $argv)
+function cli_start(int $argc, array $argv)
 {
 
     if ($argv[1] === 'migrate') {
@@ -57,8 +57,4 @@ function cli_start($argc, $argv)
         }
 
     }
-
-
 }
-
-;

@@ -8,28 +8,29 @@
  */
 function cache_get_model($type, $id)
 {
-    cache_get($type . ':' . $id);
+    return cache_get($type . ':' . $id);
 }
 
+/**
+ * @param $type
+ * @param $id
+ * @param $data
+ * @param null $ttl
+ * @return null|bool
+ */
 function cache_set_model($type, $id, $data, $ttl = null)
 {
     if ($data) {
-        cache_set($type . ':' . $id, $data, $ttl);
+        return cache_set($type . ':' . $id, $data, $ttl);
     }
+
+    return null;
 }
 
-function cache_patch_model($type, $id, array $data)
-{
-    $cached = cache_get_model($type, $id);
-    if ($cached) {
-        foreach ($data as $attr => $value) {
-            $cached[ $attr ] = $value;
-        }
-
-        cache_set_model('order', $id, $cached);
-    }
-}
-
+/**
+ * @param $type
+ * @param $id
+ */
 function cache_del_model($type, $id)
 {
     cache_del($type . ':' . $id);

@@ -87,7 +87,7 @@ class OrderTest extends BaseTest
             ],
         ]);
 
-        $this->request('order.handle', []);
+        $this->request('test.order.handle', []);
 
         $hirer = $this->getUser(1);
 

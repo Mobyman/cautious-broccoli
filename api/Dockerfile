@@ -5,7 +5,7 @@ ENV PHP_VER="7.2"
 
 RUN apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
-       cron supervisor tzdata ca-certificates locales wget curl apt-transport-https git-core vim mc less \
+       cron supervisor tzdata ca-certificates locales wget curl apt-transport-https git-core vim mc less apt-utils \
     && mkdir -p /var/log/supervisor \
     && echo "Europe/Moscow" > /etc/timezone && dpkg-reconfigure tzdata \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
@@ -37,6 +37,7 @@ RUN chmod 644 /etc/cron.d/*
 
 WORKDIR /var/www/default
 
+COPY deploy/firstrun.sh /tmp/firstrun.sh
 COPY deploy/entrypoint.sh /root/
 RUN chmod +x /root/entrypoint.sh
 

@@ -1,6 +1,9 @@
 <?php
 
-
+/**
+ * @param $params
+ * @return array
+ */
 function user_register($params): array
 {
     $req = validator_validate([
@@ -24,13 +27,13 @@ function user_register($params): array
     ], $params);
 
     if (!$req) {
-        response_error('Invalid request params');
+        return response_error('Invalid request params');
     }
 
     $isAlreadyRegister = m_User_exists_login($params['login']);
 
     if ($isAlreadyRegister) {
-        response_error('Пользователь с таким именем уже есть.', 403);
+        return response_error('Пользователь с таким именем уже есть.', 403);
     }
 
     $status = m_User_create($params['login'], $params['password'], $params['type']);
@@ -57,7 +60,7 @@ function user_auth($params): array
     $userId = m_User_exists_login_password($req['login'], $req['password']);
 
     if (!$userId) {
-        response_error('User not found', 404);
+        return response_error('User not found', 404);
     }
 
     try {
@@ -93,7 +96,7 @@ function user_role_is($role)
     ];
 
     if (empty($roles[ $role ])) {
-        response_error('Invalid role param');
+        return response_error('Invalid role param');
     }
 
     $profile = user_init_profile();

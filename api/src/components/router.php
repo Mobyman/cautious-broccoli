@@ -1,33 +1,37 @@
 <?php
 
-$router = [];
-
+/**
+ * @param $body
+ * @return null
+ */
 function router_handle($body)
 {
+    global $_router;
+
     if (empty($body['method'])) {
-        response_error('Missing method param');
+        return response_error('Missing method param');
     }
 
-    $router['_routes'] = [
-        'user.register' => 'user_register',
-        'user.auth'     => 'user_auth',
-        'user.profile'  => 'user_profile',
-        'order.create'  => 'order_create',
-        'order.assign'  => 'order_assign',
-        'order.list'    => 'order_list',
-        'order.get'     => 'order_get',
-        'order.handle'  => 'order_handle',
-    ];
+    if(empty($_router)) {
+        $_router['_routes'] = [
+            'user.register' => 'user_register',
+            'user.auth'     => 'user_auth',
+            'user.profile'  => 'user_profile',
+            'order.create'  => 'order_create',
+            'order.assign'  => 'order_assign',
+            'order.list'    => 'order_list',
+            'order.get'     => 'order_get',
+            'test.order.handle'  => 'order_handle',
+        ];
+    }
 
     $method = $body['method'];
     unset($body['method']);
     $params = $body ?? [];
 
-    if (!empty($router['_routes'][ $method ])) {
-        return response_respond($router['_routes'][ $method ]($params));
+    if (!empty($_router['_routes'][ $method ])) {
+        return response_respond($_router['_routes'][ $method ]($params));
     }
 
     return response_error('Route not found');
 }
-
-$app['router'] = $router;

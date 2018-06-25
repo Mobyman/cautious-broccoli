@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS orders (
   `title` VARCHAR(255) NOT NULL DEFAULT '',
   `description` VARCHAR(4096) DEFAULT '',
 UNIQUE KEY `transaction_id_idx` (`transaction_id`) USING HASH,
+KEY `status_idx` (`status`) USING BTREE,
 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
