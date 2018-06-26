@@ -71,9 +71,16 @@ body {
 .ticket {
     background: #f9f9f9;
     padding: 15px;
+    margin-top: 10px;
+    border: 1px solid #eee;
 }
 
-.ticket-title {
+.ticket-title div {
+    color: #999;
+    font-size: 12px;
+}
+
+.ticket-title a {
     font-size: 20px;
     color: #000;
 }

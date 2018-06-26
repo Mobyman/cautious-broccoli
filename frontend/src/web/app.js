@@ -11,7 +11,7 @@ angular.module('vkDemo', [
 ]).service('User', function ($rootScope, $cookies) {
 
     const apiURL = 'http://vkdemo.mobyman.org/api/';
-    const PROFILE_TTL = 60;
+    const PROFILE_TTL = 30;
 
     let self = this;
 

@@ -3,18 +3,28 @@
     <div class="container">
         <div infinite-scroll='tickets.nextPage()' infinite-scroll-disabled='tickets.busy' infinite-scroll-distance='1'>
 
-            <div ng-repeat='model in tickets.items' class="ticket row" style="margin-top:10px; border: 1px solid #eee;">
+            <div class="col-md-12" ng-if="!tickets.items.length">
+                <div class="alert alert-danger">
+                    Заказы не найдены
+                </div>
+            </div>
 
-                <div class="col-md-12" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
+
+            <div ng-repeat='model in tickets.items' class="ticket row" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
+
+                <div class="col-md-12">
                     <div class="row">
-                        <a href="/#!/tickets/{{ model.id }}" class="col-md-12 ticket-title">{{model.title}}</a>
+                        <div class="ticket-title">
+                            <div>#{{ model.id }}</div><a href="/#!/tickets/{{ model.id }}" class="col-md-12">{{model.title}}</a>
+                        </div>
+
                     </div>
                     <div class="row">
                         <small class="col-md-10 ticket-description">{{ model.description }}</small>
                     </div>
                     <div class="row mt-2">
                         <div class="col-md-2">
-                            <button class="ticket-assign btn btn-success" ng-if="profile.type==2" ng-click="assign(model.id, $event)">Выполнить {{ model.cost }}₽</button>
+                            <button class="ticket-assign btn btn-success" ng-if="profile.type==2" ng-click="assign(model.id, $event)">Выполнить за {{ (model.cost - (model.cost / 100) * 5) / 100 }}₽</button>
                         </div>
                     </div>
                 </div>

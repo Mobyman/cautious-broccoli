@@ -9,7 +9,7 @@ function router_handle($body)
     global $_router;
 
     if (empty($body['method'])) {
-        return response_error('Missing method param');
+        return response_error('Missing method param' . var_export($body, true));
     }
 
     if(empty($_router)) {
@@ -21,6 +21,8 @@ function router_handle($body)
             'order.assign'  => 'order_assign',
             'order.list'    => 'order_list',
             'order.get'     => 'order_get',
+
+            // это тестовый метод, нужно закрывать его в конфиге боевого nginx (я оставлю открытым)
             'test.order.handle'  => 'order_handle',
         ];
     }

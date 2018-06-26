@@ -23,7 +23,7 @@ angular.module('vkDemo.create', ['ngRoute', 'ngCookies']).config(['$routeProvide
             token: $cookies.get('token'),
             title: $scope.model.title,
             description: $scope.model.description,
-            cost: $scope.model.cost,
+            cost: $scope.model.cost * 100,
         }).then((json) => {
             if (json.meta.code === 200 && json.order_id) {
                 $location.path('/tickets/' + json.order_id);

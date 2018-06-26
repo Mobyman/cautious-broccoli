@@ -20,7 +20,7 @@
     <a ng-if="profile.type==1" href="#!/create">Создать заказ</a>
     <a ng-if="profile.login" class="float-right" href="#!/logout">Выйти</a>
     <span ng-if="profile.login" class="float-right">Вы вошли как {{ profile.login }} ({{ types[profile.type] }})</span>
-    <span ng-if="profile" class="float-right">Ваш баланс: {{ profile.balance }}</span>
+    <span ng-if="profile" class="float-right">Ваш баланс: {{ profile.balance / 100 }} ₽</span>
 </div>
 
 <div class="content mt-5 offset-4 col-md-5" ng-view></div>

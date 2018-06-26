@@ -19,6 +19,8 @@ services:
       APPLICATION_ENV: dev
   cache:
     image: memcached:latest
+    command:
+      - '--memory-limit=1024'
     networks:
       - freelance
   db-order:

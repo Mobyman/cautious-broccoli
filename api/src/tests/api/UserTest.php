@@ -84,8 +84,9 @@ class UserTest extends BaseTest
         ]);
         $this->tester->seeResponseContainsJson([
             'meta' => [
-                'code' => 404,
+                'code' => 400,
             ],
+            'message' => 'Invalid credentials'
         ]);
     }
 }

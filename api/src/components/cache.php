@@ -33,5 +33,5 @@ function cache_set_model($type, $id, $data, $ttl = null)
  */
 function cache_del_model($type, $id)
 {
-    cache_del($type . ':' . $id);
+    return cache_del($type . ':' . $id);
 }

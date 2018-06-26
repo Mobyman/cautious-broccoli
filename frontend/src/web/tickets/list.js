@@ -18,17 +18,30 @@ app.config(['$routeProvider', function ($routeProvider) {
 app.controller('singleCtrl', function ($routeParams, $location, $scope, $cookies, User) {
     $scope.id = $routeParams.ticket;
 
+
     User.request({
         method: 'order.get',
         token: $cookies.get('token'),
         id: $scope.id
     }).then((json) => {
-        if (json.item) {
-            $scope.model = json.item;
+
+        if (json.meta.code === 200) {
+            if (json.item) {
+                $scope.model = json.item;
+            } else {
+                $scope.model.error = e.message || 'Error';
+            }
+
+            $scope.$apply('model');
         } else {
-            $scope.model.error = e.message || 'Error';
+
+            $scope.model = {};
+            $scope.model.error = json.message;
+            $scope.$apply('model');
+
+            return null;
         }
-        $scope.$apply('model');
+
     }).catch((e) => {
         console.error(e);
         $scope.model.error = e.message || 'Error';
@@ -51,10 +64,13 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
             this.items = [];
             this.busy = false;
             this.page = 1;
+            this.end = false;
         };
 
         nextPage() {
             if (this.busy) return;
+            if (this.end) return;
+
             this.busy = true;
 
             let self = this;
@@ -65,6 +81,16 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
                 page: self.page
             }).then((json) => {
 
+                if (json.meta.code === 404) {
+                    self.busy = false;
+                    self.end = true;
+                    if(!self.items) {
+                        $scope.error = json.message;
+                    }
+                    $scope.$apply('tickets');
+                    return;
+                }
+
                 if (json.meta.code === 200) {
                     let items = json.items;
                     for (let i = 0; i < items.length; i++) {
@@ -73,8 +99,6 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
 
                     ++self.page;
                     self.busy = false;
-                } else {
-                    self.items = [{id: 1}]
                 }
 
                 $scope.$apply('tickets');

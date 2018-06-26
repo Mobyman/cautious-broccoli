@@ -2,6 +2,7 @@
 
 const ROLE_WORKER = 'worker';
 const ROLE_HIRER  = 'hirer';
+const DEFAULT_PAGE           = 1;
 
 /**
  * @param $params
@@ -38,9 +39,16 @@ function order_create($params): array
         return response_error('You must be hirer for create orders!', 403);
     }
 
-    $orderId = m_Order_create(request_user_get_id(), $req['cost'], $req['title'], $req['description']);
+    $profile = user_profile_data();
+    if($profile['balance'] >= $req['cost']) {
+        $orderId = m_Order_create(request_user_get_id(), $req['cost'], $req['title'], $req['description']);
 
-    return ['order_id' => $orderId];
+        return ['order_id' => $orderId];
+    }
+
+    response_error('Недостаточно средств');
+
+
 }
 
 /**
@@ -84,13 +92,14 @@ function order_list($params): array
         ],
         'page'  => [
             'type'    => 'number',
-            'default' => 0,
             'range'   => [
                 1,
                 null,
             ],
         ],
     ], $params);
+
+    $req['page'] = $req['page'] ?? DEFAULT_PAGE;
 
     --$req['page'];
 
@@ -120,7 +129,7 @@ function order_get($params): array
         ],
     ], $params);
 
-    $order = m_Order_get($req['id']);
+    $order = m_Order_get($req['id'], true, [ORDER_STATUS_OPENED]);
 
     return ['item' => $order];
 }

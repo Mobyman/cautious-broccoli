@@ -48,13 +48,6 @@ function validator_validate(array $queryRules, array $params)
             'enum'       => function ($values, $v) {
                 return in_array($v, $values, true);
             },
-            'default' => function($value, $v) {
-                if(empty($v)) {
-                    return $value;
-                }
-
-                return $v;
-            },
         ];
     }
 

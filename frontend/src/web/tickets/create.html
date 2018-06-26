@@ -14,7 +14,9 @@
             <input ng-model="model.cost" type="number" id="cost" class="form-control" name="title" placeholder="Стоимость, ₽" required min="0">
         </div>
 
-        <div class="text-danger" ng-if="model.error">{{ model.error }}</div>
+        <div class="alert alert-danger" ng-if="model.error">
+            <div>{{ model.error }}</div>
+        </div>
 
         <div class="form-group mt-3">
             <button type="submit" class="btn btn-sm btn-success">Создать</button>

@@ -8,6 +8,7 @@ function cache_init()
         getConfig()['memcache']['host'],
         getConfig()['memcache']['port']
     );
+//    memcache_flush($_db['cache']['_connection']);
     // @formatter:on
 }
 

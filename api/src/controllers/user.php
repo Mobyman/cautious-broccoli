@@ -83,7 +83,7 @@ function user_profile($params) {
         ],
     ], $params);
 
-    $profile = user_init_profile();
+    $profile = user_profile_data();
     return ['profile' => $profile];
 }
 
@@ -99,7 +99,7 @@ function user_role_is($role)
         return response_error('Invalid role param');
     }
 
-    $profile = user_init_profile();
+    $profile = user_profile_data();
 
     return (int) $profile['type'] === $roles[ $role ];
 }
