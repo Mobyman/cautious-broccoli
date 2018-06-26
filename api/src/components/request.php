@@ -73,6 +73,9 @@ function user_profile_data()
 {
     if (empty($_user['profile'])) {
         $_user['profile'] = m_User_get_profile(request_user_get_id());
+        if(isset($_user['profile']['last_transaction_id'])) {
+            unset($_user['profile']['last_transaction_id']);
+        }
     }
 
     return $_user['profile'];

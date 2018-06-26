@@ -85,7 +85,7 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
                 if (json.meta.code === 404) {
                     self.busy = false;
                     self.end = true;
-                    if(!self.items) {
+                    if (!self.items) {
                         $scope.error = json.message;
                     }
                     $scope.$apply('tickets');
@@ -112,14 +112,32 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
 
     $scope.tickets = new Ticket();
 
-    $scope.assign = function (id, $event) {
+    $scope.assign = function (id, $event, $index) {
         return User.request({
             method: 'order.assign',
             order_id: id,
             token: $cookies.get('token'),
         }).then((json) => {
-            $event.target.handled = json.status || false;
-            $event.target.closest(".ticket").remove();
+
+            $scope.tickets.items.splice($index, 1);
+            $scope.$apply('tickets');
+
+            if (json.meta.code !== 200 || !json.order_id) {
+                let error = json.message;
+                console.log('Произошла ошибка при удалении', error);
+            }
+
+            if (json.meta.code === 200 && json.order_id) {
+                if ($scope.tickets.items.length === 0) {
+                    --$scope.tickets.page;
+                    $scope.tickets.nextPage();
+                    $scope.$apply('tickets');
+                }
+
+                return true;
+            }
+
+
         }).catch((e) => {
             console.error(e);
         });

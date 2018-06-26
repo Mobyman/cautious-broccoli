@@ -78,7 +78,7 @@ function m_Order_assign(int $orderId, int $worker_id)
     mysqli_stmt_close($s);
 
     if (!$rows) {
-        return response_error('Order for assign not found' . $orderId, 404);
+        return response_error('Order for assign not found: ' . $orderId, 404);
     }
 
     if ($error) {
@@ -252,58 +252,50 @@ function m_Order_get_last_id($isWithCache = true)
  */
 function m_Order_list(int $page)
 {
-    $orderIds = null;//cache_get_model('orders', $page);
+    $status   = ORDER_STATUS_OPENED;
+    $pageSize = PAGE_SIZE;
+
+    $offset = $page * PAGE_SIZE;
+
+    $lastId  = m_Order_get_last_id();
+    $startId = 0;
+    if ($lastId) {
+        $allPages = (int) round($lastId / 50);
+        if ($page > $allPages) {
+            return response_error('Заказы не найдены!', 404);
+        }
+
+        ++$page;
+    }
+
+    $query = 'SELECT id FROM orders WHERE status=? AND id>? ORDER BY id DESC LIMIT ?,?';
+    $s     = mysqli_prepare(db_getConnection('order'), $query);
+
+
+    mysqli_stmt_bind_param($s, 'iiii', $status, $startId, $offset, $pageSize);
+    mysqli_stmt_execute($s);
+    $error  = mysqli_stmt_error($s);
+    $result = mysqli_stmt_bind_result($s, $id);
+
+    if (!$result) {
+        return response_error('Заказы не найдены', 404);
+    }
+
+    if ($error) {
+        error_log($error);
+
+        return response_error('DB error');
+    }
+
+    $orderIds = [];
+    while (mysqli_stmt_fetch($s)) {
+        $orderIds[] = $id;
+    }
+
+    mysqli_stmt_close($s);
 
     if (!$orderIds) {
-        $status   = ORDER_STATUS_OPENED;
-        $pageSize = PAGE_SIZE;
-
-        $offset = $page * PAGE_SIZE;
-
-        $lastId  = m_Order_get_last_id();
-        $startId = 0;
-        if ($lastId) {
-            $allPages = (int) round($lastId / 50);
-            if ($page > $allPages) {
-                return response_error('Заказы не найдены!', 404);
-            }
-
-            ++$page;
-        }
-
-        $query = 'SELECT id FROM orders WHERE status=? AND id>? ORDER BY id DESC LIMIT ?,?';
-        $s     = mysqli_prepare(db_getConnection('order'), $query);
-
-
-        mysqli_stmt_bind_param($s, 'iiii', $status, $startId, $offset, $pageSize);
-        mysqli_stmt_execute($s);
-        $error  = mysqli_stmt_error($s);
-        $result = mysqli_stmt_bind_result($s, $id);
-
-        if (!$result) {
-            return response_error('Заказы не найдены', 404);
-        }
-
-        if ($error) {
-            error_log($error);
-
-            return response_error('DB error');
-        }
-
-        $orderIds = [];
-        while (mysqli_stmt_fetch($s)) {
-            $orderIds[] = $id;
-        }
-
-        mysqli_stmt_close($s);
-
-        if (!$orderIds) {
-            return response_error('Заказы не найдены', 404);
-        }
-
-        if ($orderIds) {
-            cache_set_model('orders', $page, $orderIds, 10);
-        }
+        return response_error('Заказы не найдены', 404);
     }
 
     $orders = [];

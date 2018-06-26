@@ -10,7 +10,7 @@ angular.module('vkDemo', [
     'vkDemo.create',
 ]).service('User', function ($rootScope, $cookies) {
 
-    const apiURL = 'https://vkdemo.mobyman.org/api/';
+    const apiURL = 'https://vkdemo.mobyman.org/api';
     const PROFILE_TTL = 30;
 
     let self = this;

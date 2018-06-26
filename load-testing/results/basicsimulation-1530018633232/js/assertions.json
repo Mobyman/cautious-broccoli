@@ -1,0 +1,10 @@
+{
+  "simulation": "vktest.BasicSimulation",
+  "simulationId": "basicsimulation",
+  "start": 1530018633232,
+  "description": "",
+  "scenarios": ["Basic"],
+  "assertions": [
+
+  ]
+}
