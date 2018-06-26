@@ -9,23 +9,18 @@ angular.module('vkDemo.register', ['ngRoute'])
         });
     }])
 
-    .controller('registerCtrl', function ($scope, $rootScope, $cookies, $location) {
+    .controller('registerCtrl', function ($scope, $rootScope, $cookies, $location, User) {
         $scope.model = {};
 
         $scope.submit = function () {
             $scope.model.error = null;
-            fetch('http://vkdemo.mobyman.org/api/', {
-                method: 'POST',
-                headers: new Headers({'Content-Type': 'application/json'}),
-                body: JSON.stringify({
-                    method: 'user.register',
-                    login: $scope.model.login,
-                    password: $scope.model.password,
-                    type: Number($scope.model.type)
-                })
-            }).then((res) => {
-                return res.json();
-            }).then((json) => {
+            User.request({
+                method: 'user.register',
+                login: $scope.model.login,
+                password: $scope.model.password,
+                type: Number($scope.model.type)
+            })
+            .then((json) => {
                 if (json.meta.code === 200 && json.status) {
                     $location.path('/login');
                     $rootScope.$apply();

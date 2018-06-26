@@ -3,7 +3,7 @@
     <div class="container">
         <div infinite-scroll='tickets.nextPage()' infinite-scroll-disabled='tickets.busy' infinite-scroll-distance='1'>
 
-            <div class="col-md-12" ng-if="!tickets.items.length">
+            <div class="col-md-12" ng-if="tickets.loaded && !tickets.items.length">
                 <div class="alert alert-danger">
                     Заказы не найдены
                 </div>

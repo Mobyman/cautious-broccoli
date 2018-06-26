@@ -81,6 +81,7 @@ app.controller('listCtrl', function ($location, $scope, $cookies, User) {
                 page: self.page
             }).then((json) => {
 
+                self.loaded = true;
                 if (json.meta.code === 404) {
                     self.busy = false;
                     self.end = true;
