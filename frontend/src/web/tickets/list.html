@@ -10,7 +10,7 @@
             </div>
 
 
-            <div ng-repeat='model in tickets.items' class="ticket row" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
+            <div ng-repeat='model in tickets.items track by $index' class="ticket row" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
 
                 <div class="col-md-12">
                     <div class="row">
@@ -24,7 +24,7 @@
                     </div>
                     <div class="row mt-2">
                         <div class="col-md-2">
-                            <button class="ticket-assign btn btn-success" ng-if="profile.type==2" ng-click="assign(model.id, $event)">Выполнить за {{ (model.cost - (model.cost / 100) * 5) / 100 }}₽</button>
+                            <button class="ticket-assign btn btn-success" ng-if="profile.type==2" ng-click="assign(model.id, $event, $index)">Выполнить за {{ (model.cost - (model.cost / 100) * 5) / 100 }}₽</button>
                         </div>
                     </div>
                 </div>

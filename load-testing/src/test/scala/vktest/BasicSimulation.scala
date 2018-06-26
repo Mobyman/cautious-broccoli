@@ -8,7 +8,7 @@ import scala.util.Random
 class BasicSimulation extends Simulation {
 
   val httpConf = http
-    .baseURL("https://vkdemo.mobyman.org/api")
+    .baseURL("http://vkdemo.local/api")
     .header("Content-Type", "application/json")
 
   val pageSize = 50;

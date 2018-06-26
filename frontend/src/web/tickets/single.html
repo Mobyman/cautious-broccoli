@@ -3,7 +3,7 @@
         <div>{{ model.error }}</div>
     </div>
 
-    <div class="ticket col-md-12" ng-if="!model.error" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
+    <div class="ticket col-md-12" ng-if="model&&!model.error" ng-class="model.hirer_id==profile.id?'ticker-owner':''">
             <div class="row">
                 <div class="col-md-10 ticket-title">{{model.title}}</div>
                 <div class="col-md-2 text-success">{{model.cost / 100 }}₽</div>
